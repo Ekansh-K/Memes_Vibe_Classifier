@@ -1,0 +1,32 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Datasets & Large Files
+dataset/
+dataset.zip
+*.whl
+
+# Output & Logs
+checkpoints/
+vlm_eval/
+*.log
+
+# Project specific
+plan_docs/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+.github/

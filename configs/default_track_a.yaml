@@ -1,0 +1,45 @@
+# Default experiment configuration for Track A (classical DL fusion)
+data:
+  dataset_dir: dataset
+  img_dir: dataset/img_resized
+  ocr_source: old
+  img_size: 224
+  convert_emoji: false
+  exclude_full_disagreement: false
+  max_tweet_length: 512
+  num_workers: 4
+
+train:
+  learning_rate: 2.0e-05
+  batch_size: 32
+  epochs: 10
+  weight_decay: 0.01
+  warmup_ratio: 0.06
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  loss_type: focal
+  focal_gamma: 2.0
+  contrastive_weight: 0.1
+  label_smoothing: 0.0
+  scheduler: cosine
+  mixed_precision: bf16
+  seed: 42
+
+model:
+  text_encoder: roberta-base
+  image_encoder: openai/clip-vit-base-patch32
+  fusion_type: cross_attention
+  hidden_dim: 512
+  num_attention_heads: 8
+  num_fusion_layers: 2
+  dropout: 0.1
+  freeze_text_encoder: false
+  freeze_image_encoder: true
+  num_classes: 6
+  classification_mode: multiclass
+
+run_name: track_a_default
+track: A
+wandb_project: mmhs150k-hate-speech
+wandb_enabled: true
+notes: Default Track A configuration
