@@ -1,0 +1,2202 @@
+[
+  {
+    "tweet_id": "1109341022524448772",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@ILoveBeinBlack Throw the whole nigga away https://t.co/A95rtWObN7",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109341022524448772.jpg"
+  },
+  {
+    "tweet_id": "1056991756150026243",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "When You Just Can't Help It But Make a Twat Of Yourself https://t.co/2776YnmM1o",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056991756150026243.jpg"
+  },
+  {
+    "tweet_id": "1056700184594386945",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Dyke bitches be like https://t.co/U8QFGkLSHN",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056700184594386945.jpg"
+  },
+  {
+    "tweet_id": "1108425060891668480",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Aye @DanielCaesar knot today my nigga knot today 🤦🏾‍♂️🤦🏾‍♂️🤦🏾‍♂️🤦🏾‍♂️ https://t.co/nuWHjTNMCf",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108425060891668480.jpg"
+  },
+  {
+    "tweet_id": "1107288519217725441",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@AfricanDynasty3 I woulda chucked that nigga https://t.co/JjvI4iiQqv",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107288519217725441.jpg"
+  },
+  {
+    "tweet_id": "1109204384410464258",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@BeulahOnoh @Bubee_O Like diswan..   Feeling the nigga meme. 😂😂 https://t.co/VJ2CHbhOdr",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109204384410464258.jpg"
+  },
+  {
+    "tweet_id": "1113065986343792640",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@SpideRhon Grab a nigga for the airport like https://t.co/wet7AH1R2D",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113065986343792640.jpg"
+  },
+  {
+    "tweet_id": "1113168670530916353",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "I’m not rollin. Call me whatever. They’ll send the nigga that’s standing right next to you. https://t.co/eKFUBjBfHl",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113168670530916353.jpg"
+  },
+  {
+    "tweet_id": "1063778091120631809",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@ce06799 @realDonaldTrump Stop stirring the shit. She lost  race card is no longer valid https://t.co/JpdFKrDxKD",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063778091120631809.jpg"
+  },
+  {
+    "tweet_id": "1115856975257010177",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@MuvaDre Baby said “did this nigga just....” thinking of how hard to sock this dude https://t.co/WTrJlyEjhk",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115856975257010177.jpg"
+  },
+  {
+    "tweet_id": "1043547783511400449",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@tteri_za @Apholerbee I innocent nigger go come carry am wholesale via marriage https://t.co/VeRHFc1cJp",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043547783511400449.jpg"
+  },
+  {
+    "tweet_id": "1063614997283176448",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@RobGeorge @jaketapper What does it matter that she’s Black? Enough of the race card already. https://t.co/A5zzXjRS8I",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063614997283176448.jpg"
+  },
+  {
+    "tweet_id": "1116541588430295041",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@Patt_A1 @pakkstarwann @pearl_sensei this nigga man 🤦🏾‍♂️ https://t.co/waqbaPmD9q",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116541588430295041.jpg"
+  },
+  {
+    "tweet_id": "1064327820728549377",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "I know that I’m no a glimmering shine on the window of humanity, but what the fuck is this cunt? https://t.co/wvJk4uadlp",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064327820728549377.jpg"
+  },
+  {
+    "tweet_id": "1043030024633311232",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@Ioversdiscourse i literally used all my faggot strength to pull him up from falling down i- skdkskdkks https://t.co/6gIZTVHHYg",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043030024633311232.jpg"
+  },
+  {
+    "tweet_id": "1106769021909827586",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@playboicarti https://t.co/y9MQsH06Dc big boss fredo rip my nigga https://t.co/MJjShsjkpY",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106769021909827586.jpg"
+  },
+  {
+    "tweet_id": "1106771456350932992",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "want sum mo, want sum mo, even tho a nigga been gettin to it, want sum mo https://t.co/vWoxIe2CCA",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106771456350932992.jpg"
+  },
+  {
+    "tweet_id": "1050391383821996032",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Designing our rube Goldberg machines https://t.co/DrVRzbm8Qk",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1050391383821996032.jpg"
+  },
+  {
+    "tweet_id": "1114223457439498240",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "did i do it? if not revoke my nigger card https://t.co/VGNJ021q8o",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114223457439498240.jpg"
+  },
+  {
+    "tweet_id": "1054446945614290946",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@sickubus Showing her dominance and the whole \"NIGGA YOU WILL RESPECT ME THE FUCK WRONG WITH YOU\" https://t.co/GpqeBXT7B4",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1054446945614290946.jpg"
+  },
+  {
+    "tweet_id": "1116314965877624832",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Isn't this nigga ugly af?😒😒 https://t.co/huA9ZNQE4U",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116314965877624832.jpg"
+  },
+  {
+    "tweet_id": "1108606847018246145",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Another #AdultWork.com member watching my hot movie right now! https://t.co/Cai7OpKVjc \"Dumping his load in my cunt\" https://t.co/bVt6PQzb64",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108606847018246145.jpg"
+  },
+  {
+    "tweet_id": "1105377425465188352",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Cheltenham Festival day 1: Racecard, schedule and TV coverage guide for Champion Day https://t.co/eiXNjiFSL5 https://t.co/hzW8z6fATH",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105377425465188352.jpg"
+  },
+  {
+    "tweet_id": "1108130335051730944",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "@HBCUfessions OH WOW THIS A NIGGA https://t.co/PnIleVWaD2",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108130335051730944.jpg"
+  },
+  {
+    "tweet_id": "1043671307529768961",
+    "stratum": "no_ocr_nothate",
+    "tweet_text": "Your such a fucking dyke #PS4share  https://t.co/wi3UBQ120b https://t.co/tz8I9OGnvL",
+    "ocr_text": "",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043671307529768961.jpg"
+  },
+  {
+    "tweet_id": "1116828626098511873",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@Pizzaguy_07 wigger https://t.co/7KS47qb6zL",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116828626098511873.jpg"
+  },
+  {
+    "tweet_id": "1042502083642105856",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "do I buy a case of beer instead? what that drowns nigger https://t.co/XQFfHaihod",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1042502083642105856.jpg"
+  },
+  {
+    "tweet_id": "1063954162050834437",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "White trash university lost? https://t.co/R06NkRDYlE",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063954162050834437.jpg"
+  },
+  {
+    "tweet_id": "1113216293837189122",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@DumbAsFucc Nigga better get out https://t.co/hGKdxMwQGM",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113216293837189122.jpg"
+  },
+  {
+    "tweet_id": "1105093769727262720",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@_JustinRichburg Fuck kinda dumb nigga shit is this https://t.co/W5MjqYuYF5",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105093769727262720.jpg"
+  },
+  {
+    "tweet_id": "1108852186560319488",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "I’m talking to myself and shit like “yo dumbass just dumb this nigga gotta bump bitch you dead” https://t.co/GarGsTctKq",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108852186560319488.jpg"
+  },
+  {
+    "tweet_id": "1108129012218507266",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "Kanye suppose to take this nigga serious ? 😂 https://t.co/JwNslyFxLL",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108129012218507266.jpg"
+  },
+  {
+    "tweet_id": "1114777065558085632",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "Kodac black...WATCH YO MOUTH..SAVE YO TEETH!! OUT OF POCKET ASS NIGGA https://t.co/LEzSBWpVGz",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114777065558085632.jpg"
+  },
+  {
+    "tweet_id": "1049831861634195456",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "halsey checking the BABY SPICƎ gc https://t.co/f3wjpQcplc",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1049831861634195456.jpg"
+  },
+  {
+    "tweet_id": "1117175221428076551",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@YSLchain @GNwizu I’ll fck u up if ever go to California one day. Bet. Btch nigga https://t.co/gk7erBzUxU",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1117175221428076551.jpg"
+  },
+  {
+    "tweet_id": "1056214989441323008",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@LifeofaSlime2 you a “mimi” ass nigga? https://t.co/Q4dWIlpYXk",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056214989441323008.jpg"
+  },
+  {
+    "tweet_id": "1036996382069010432",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@itsreallyalexb He’s a horses behind nobody but redneck racist people would know him !! https://t.co/tUA6iHhHE7",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1036996382069010432.jpg"
+  },
+  {
+    "tweet_id": "1061384416176496640",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "My baby daddy got his hair cut I just wanna sit on his face all the time 👅👅👅 it’s BIG NIGGA SEASON https://t.co/iCJ6XmToLI",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061384416176496640.jpg"
+  },
+  {
+    "tweet_id": "1062153472055955456",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@flowerboyj9 @_h4zel_ Listen here nigger, this is me at 60. https://t.co/R1qynTCwPg",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062153472055955456.jpg"
+  },
+  {
+    "tweet_id": "1108169191134298112",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "so you know how we say “pussy ass nigga”  is there a such thing as a...”bussy ass nigga”  ??????? https://t.co/FJ8i0xX1JW",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108169191134298112.jpg"
+  },
+  {
+    "tweet_id": "1110239996970180608",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "My nigga Gotti 🤣🤣🤣 https://t.co/XI3MFKofR7",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110239996970180608.jpg"
+  },
+  {
+    "tweet_id": "1115802038191968256",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@KaylaHernandezx Ok go play with some feeling then when that nigga show up like...😂🤣😂🤣😂 https://t.co/kFrt7XMBMH",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115802038191968256.jpg"
+  },
+  {
+    "tweet_id": "1109908873207574528",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@andrewschulz orgasm joke was soooo funny I called this dude a nigga in my head like 10 times😭😭😭😭😭 https://t.co/4bnDBsyA1a",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109908873207574528.jpg"
+  },
+  {
+    "tweet_id": "1057369913340387329",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "@KingZeus_ You ignorant nigger have some respect okay! https://t.co/NUek6zO5bF",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057369913340387329.jpg"
+  },
+  {
+    "tweet_id": "1045134377133445121",
+    "stratum": "no_ocr_racist",
+    "tweet_text": "YEAH SURE, WHITE TRASH! WE BELIEVE EVERYTHING YOU HAVE TO SAY... https://t.co/xtNXtcL1uc",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1045134377133445121.jpg"
+  },
+  {
+    "tweet_id": "1050202493446221825",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Shared from Photos app 1 photo feminazi's busy killing babies and laundering money to the democrats https://t.co/DXiME8nKlL",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1050202493446221825.jpg"
+  },
+  {
+    "tweet_id": "1107838062229446657",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "This looks kinda nice! 🙄 But this clearly has to be this nigga’s 🗣FIRST time sucking on a PETER! 😂 https://t.co/vZXQCCpHGY",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107838062229446657.jpg"
+  },
+  {
+    "tweet_id": "1058692628257103872",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Spot the difference  Happy Women Vs Unhappy Feminists   #grabthembytheballot #SJW #sjws #feminism #mentalhealth https://t.co/whn8ElORG9",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058692628257103872.jpg"
+  },
+  {
+    "tweet_id": "1052534922664132608",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "At my feet, where all you Beasties belong.  A little foot massage before this slave gets his slave cunt buggered! https://t.co/NhpixFZ1Co",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1052534922664132608.jpg"
+  },
+  {
+    "tweet_id": "1047193083421577219",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "BREAKING: Jason van Dyke takes the witness stand in his murder trail. https://t.co/YUEqawwf6E",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1047193083421577219.jpg"
+  },
+  {
+    "tweet_id": "1105721326126489605",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Lyric Seal’s Dyke Drama Strip Tease and Bedroom Eyes - https://t.co/U6gVWUEPBq https://t.co/idy2JLNIpC",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105721326126489605.jpg"
+  },
+  {
+    "tweet_id": "1115066949657137152",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "The fucks happened to my life that I end up in a gay bar with some homeless cunt https://t.co/0NcOByK7kh",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115066949657137152.jpg"
+  },
+  {
+    "tweet_id": "1114228783538626560",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Masturbation-addicted faggot on full display. Dared to show face. Fuck I’m doing it!!! https://t.co/X8UAjtHnT3",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114228783538626560.jpg"
+  },
+  {
+    "tweet_id": "1114932829232803840",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Who Love The Lil Booties ⁉️ #Like #RT #HMU #LilBootiesMatter #SkinnyBoy Lil Nigga Stay Wet 💦💦😜 https://t.co/ngQIdLQctr",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114932829232803840.jpg"
+  },
+  {
+    "tweet_id": "1107320120660164613",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "nigga sucked the nipple ring out my titty https://t.co/AqmAIla2U5",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107320120660164613.jpg"
+  },
+  {
+    "tweet_id": "1114251737886363648",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Welp, Avi Yemini just made Jim Jefferies look like a cunt 😶 https://t.co/rZmPuHn1wq",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114251737886363648.jpg"
+  },
+  {
+    "tweet_id": "1061799925275594752",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "@alison_starke Thank YOU Yes I am YOUR sissy faggot FOR YOU Mmmm 🌞❤️☺️🙃🍑🌞🌞🌞🌞🌞💋 https://t.co/OdqSJNQIog",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061799925275594752.jpg"
+  },
+  {
+    "tweet_id": "1109846715828527104",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Bxchess hate , but they nigga in LOVE 🤷‍♀️🤪 #YONĆE https://t.co/DY1XbR3n8H",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109846715828527104.jpg"
+  },
+  {
+    "tweet_id": "1113937909365788672",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "@Onepatcho STOP DELETING UR TWEETS CUNT https://t.co/gXAwpTS0xz",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113937909365788672.jpg"
+  },
+  {
+    "tweet_id": "1044982759192764416",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Help, theres a twat in my living room, no wait, thats my husband 😂 #wannabe #oasis https://t.co/pXm9En12sM",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1044982759192764416.jpg"
+  },
+  {
+    "tweet_id": "1116309041926434816",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "@Mr_ChRiSsI_X @Bens_2019 @Pringster78 That cunt https://t.co/0UdOA1DvDI",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116309041926434816.jpg"
+  },
+  {
+    "tweet_id": "1113603991429177344",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "i need a nigga who gon swipe them visas https://t.co/gBqMomXHoR",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113603991429177344.jpg"
+  },
+  {
+    "tweet_id": "1058995506100297728",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "Just sold! Black Stallion  XXL Dick hammers my Cunt https://t.co/ext0eby1Pa #MVSales #ManyVids https://t.co/RNyOy8Sz2t",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058995506100297728.jpg"
+  },
+  {
+    "tweet_id": "1108023215777964032",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "@jovanforever @DavidDobrik didn't he say faggot too https://t.co/ctZ07PVspX",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108023215777964032.jpg"
+  },
+  {
+    "tweet_id": "1116941427571941376",
+    "stratum": "no_ocr_sexist",
+    "tweet_text": "give your nigga pussy whenever bro https://t.co/yv5oG08b5f",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116941427571941376.jpg"
+  },
+  {
+    "tweet_id": "1057732056556294144",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "@katyperry WE NEED A HALLOWEEN LOOK LIKE THIS BALD DYKE https://t.co/tf2cYdfwke",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057732056556294144.jpg"
+  },
+  {
+    "tweet_id": "1061624985335328768",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "when I see a faggot I floor it https://t.co/uayREwi2iL",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061624985335328768.jpg"
+  },
+  {
+    "tweet_id": "1053668448079921154",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "“sometimes I leave my wifey, spend the night with my dyke” https://t.co/AqYvp8DyiS",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1053668448079921154.jpg"
+  },
+  {
+    "tweet_id": "1041844979835039745",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "@OmarIGR shut up faggot 💋 https://t.co/6z7dACeSiS",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1041844979835039745.jpg"
+  },
+  {
+    "tweet_id": "1116659584087875584",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "Faggot Andrew S exposed as a cocksucker #gay #faggot #exposed #exposedfaggot #faggotexposed #cocksucker https://t.co/WEL1mTERPC",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116659584087875584.jpg"
+  },
+  {
+    "tweet_id": "1115367330148704257",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "Come here faggot I got a treat for u #faggot #fag #pig #paypiggy #atm #drainthefag https://t.co/LPD7oWfuDP",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115367330148704257.jpg"
+  },
+  {
+    "tweet_id": "1025254128187056128",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "happy birthday to my dyke friend juju on da beat 🤠 @coloredgod https://t.co/3bQMxzHtDZ",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1025254128187056128.jpg"
+  },
+  {
+    "tweet_id": "1113558096918528001",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "muscle, manly face, beard, smooth legs, locked small dick and plugged butt. good faggot #faggot #locked #dildo https://t.co/7wDaW5kLXu",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113558096918528001.jpg"
+  },
+  {
+    "tweet_id": "1056692026769637381",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "someone just called me a fat jew dyke and threw a doc marten at me :(( this was her https://t.co/iPg6lIWMX6",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056692026769637381.jpg"
+  },
+  {
+    "tweet_id": "1106627519992815616",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "Text with your orders. 865-363-8809. The faggot needs orders to follow https://t.co/aMeMdgMIRS",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106627519992815616.jpg"
+  },
+  {
+    "tweet_id": "1036034041861074945",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "@isafuckingcote Listen here faggot https://t.co/dFOl1Ndk4X",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1036034041861074945.jpg"
+  },
+  {
+    "tweet_id": "1063949878462742528",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "My retweeting all my dyke-go-oh shite https://t.co/btFdgswqkr",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063949878462742528.jpg"
+  },
+  {
+    "tweet_id": "1117437455882498048",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "Nothing is worst than going out with a nigga and your friends and realizing you no longer like the nigga! Lol https://t.co/W6GvjvHBAt",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1117437455882498048.jpg"
+  },
+  {
+    "tweet_id": "1061255850591993856",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "boo boo the faggot https://t.co/xQbsh3rtPj",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061255850591993856.jpg"
+  },
+  {
+    "tweet_id": "1113172223278366722",
+    "stratum": "no_ocr_homophobe",
+    "tweet_text": "#SongsThatDontLikeYou You scumbag,you maggot, you cheap, dirty faggot. https://t.co/jSiObG8Kd0",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113172223278366722.jpg"
+  },
+  {
+    "tweet_id": "1105848999897169920",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "this nigga opened the door to narnia https://t.co/j7a7NuLK7Q",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105848999897169920.jpg"
+  },
+  {
+    "tweet_id": "1063904575990743040",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "@FOOKING_CUNT Who the fuck would want to live like that \"Well Except this TICK IRISH CUNT \" https://t.co/ycGw20ahyc",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063904575990743040.jpg"
+  },
+  {
+    "tweet_id": "1105845974302257152",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "IS fighters blitzed into surrender as defeat looms in Syria https://t.co/8T03gRgUDu via @TOIWorld https://t.co/vQgdT0fYdb",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105845974302257152.jpg"
+  },
+  {
+    "tweet_id": "1043174771419176960",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "San Francisco museum shows off modern Muslim women's fashion https://t.co/uK7dNyDNrW #BanSharia #StopIslam https://t.co/foJ3qxTa3l",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043174771419176960.jpg"
+  },
+  {
+    "tweet_id": "1107810170074251264",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "This nigga dressed like a bad guy from Pootie Tang 🤣🤣🤣🤣 https://t.co/9CjymtIqcr",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107810170074251264.jpg"
+  },
+  {
+    "tweet_id": "1109494375493570560",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "@Hypnotic1femmeS Omfg... What a twat waffle... https://t.co/ZsJs2QnpLD",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109494375493570560.jpg"
+  },
+  {
+    "tweet_id": "1054069086739750913",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "Arab Spring's Legacy:  Islamist Gang Terror  #Blumenthal #LordofWar #McCain #Graham  https://t.co/Y2h9WHp68v   . https://t.co/6RX7yShPyF",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1054069086739750913.jpg"
+  },
+  {
+    "tweet_id": "1110284725984378885",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "@SpartnGuy this cunt is my friend lol https://t.co/JKlxZLzqWG",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110284725984378885.jpg"
+  },
+  {
+    "tweet_id": "1105860099434864640",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "Syria force says ISIS defeat looms after jihadists blitzed into surrender... https://t.co/qH69N7qodl https://t.co/TC7whTFnJ0",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105860099434864640.jpg"
+  },
+  {
+    "tweet_id": "1061541240980811776",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "@drdivinity @KTHopkins Careful! Muslim invasion here in central London #twat https://t.co/1AbYz8FyA3",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061541240980811776.jpg"
+  },
+  {
+    "tweet_id": "1115056200343674880",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "@arrrossss “you” retarded, i guess being illiterate isn’t a choice huh https://t.co/YTIMCZWm1h",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115056200343674880.jpg"
+  },
+  {
+    "tweet_id": "1035565164324704256",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "#trapmusic is the retarded cousin of #rap https://t.co/pxUUaYUdAc",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1035565164324704256.jpg"
+  },
+  {
+    "tweet_id": "1110006760981569536",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "stop being STUPID u fat CUNT https://t.co/iVGb9CKdMu",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110006760981569536.jpg"
+  },
+  {
+    "tweet_id": "1107799606983835648",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "“LETS HANG THAT NIGGA UP LIKE A CAPITAL T” https://t.co/vejK1O4zHl",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107799606983835648.jpg"
+  },
+  {
+    "tweet_id": "1105300661816737797",
+    "stratum": "no_ocr_religion",
+    "tweet_text": "Still the same nigga , my bag just got bigger💰💯💪🏽 https://t.co/H3LdrPE98p",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105300661816737797.jpg"
+  },
+  {
+    "tweet_id": "1043240410645192704",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@FalconsFlockin @bballanalyst @BrosephSZN @RapSheet You’re fucking retarded bro. Biased Falcons fan. https://t.co/L7hSF3fZwc",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043240410645192704.jpg"
+  },
+  {
+    "tweet_id": "1041767719773921280",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "I'm at Rustic Acres Hillbilly Junction https://t.co/9xO2i9xjIk https://t.co/3veToL5NsQ",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1041767719773921280.jpg"
+  },
+  {
+    "tweet_id": "1055884873490198530",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@MBuhari Nigger please! This is our situation https://t.co/DIqcfm2s9d",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1055884873490198530.jpg"
+  },
+  {
+    "tweet_id": "1053755910869274624",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "Me: “yo this haircut I got lw Fire”  Girl: you look like Vince Staples retarded brother https://t.co/t5ZT2KmVb2",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1053755910869274624.jpg"
+  },
+  {
+    "tweet_id": "1050947444656107522",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "Told my white coworker I’m getting grillz n he said “that’s retarded” https://t.co/q94eIXx4nN",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1050947444656107522.jpg"
+  },
+  {
+    "tweet_id": "1034827118079889408",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "“We caught you using the word Faggot on July 23rd, 2011! Apologize you POS!” https://t.co/Rz1YOnWKcS",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1034827118079889408.jpg"
+  },
+  {
+    "tweet_id": "1061983521005363201",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@libral_hunter Get out of my comments retard https://t.co/KEPCD8xAnP",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061983521005363201.jpg"
+  },
+  {
+    "tweet_id": "1061546896211070977",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "feeling retarded... what do i do with this https://t.co/O7yh5aUU5G",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061546896211070977.jpg"
+  },
+  {
+    "tweet_id": "1050448127021350913",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "If you look up \"retard\" in the dictionary, expect to see this photo https://t.co/01PvDmmtrz",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1050448127021350913.jpg"
+  },
+  {
+    "tweet_id": "1063889140226420736",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "one of the most retarded ppl in my grade got a 48 and i got a 40 🙈 https://t.co/Vv2g3OyNfh",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063889140226420736.jpg"
+  },
+  {
+    "tweet_id": "1062423218487812098",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "Any black guys in SE London tonight want to lay some black pipe deep in my cunt https://t.co/fPFVq4Ymom",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062423218487812098.jpg"
+  },
+  {
+    "tweet_id": "1060870838151471105",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@Maxhawk4 @andrew_liggins @TheRealJugs @ElaineYoung94 that look when you realise what a monumental twat you are... https://t.co/OzGuDKfyu6",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1060870838151471105.jpg"
+  },
+  {
+    "tweet_id": "1051294729655083008",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@kharyp this is white trash https://t.co/ULnZebtikp",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1051294729655083008.jpg"
+  },
+  {
+    "tweet_id": "1058547569704427521",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "@BananaShanz OMG YOU REMIND ME OF LEAFY “YO IS THIS KID FUCKING RETARDED” https://t.co/AYdEzsM60l",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058547569704427521.jpg"
+  },
+  {
+    "tweet_id": "1045745828302741504",
+    "stratum": "no_ocr_otherhate",
+    "tweet_text": "This is White Trash. https://t.co/rZpNseNcxL",
+    "ocr_text": "",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1045745828302741504.jpg"
+  },
+  {
+    "tweet_id": "1114652796563927043",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "can't escape nigga https://t.co/4RrwwgQkQy",
+    "ocr_text": "TAG THE PERSON WHO MOLESTEDYOU",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114652796563927043.jpg"
+  },
+  {
+    "tweet_id": "1043590617773826049",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Gonna fix a redneck margarita for reading time. https://t.co/roO4nU4LHw",
+    "ocr_text": "EVERYTHING TRUMP TOUCHES DIES Republican Strategist Gets Real About the Worst President Ever RICKWILSON",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043590617773826049.jpg"
+  },
+  {
+    "tweet_id": "1115366417019408385",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "@MrinconSiderate Nigga!! 😭😭😭😭😭☠☠☠☠ https://t.co/zVMjDrnihk",
+    "ocr_text": "DAVOPETEAN",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115366417019408385.jpg"
+  },
+  {
+    "tweet_id": "1113419007317749760",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Or in bonucci’s words, he is a twat but I don’t like all of the hate I’m getting https://t.co/La9C2UuOat",
+    "ocr_text": "KEAN Regardless of everything, case... in any NOTORACISM",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113419007317749760.jpg"
+  },
+  {
+    "tweet_id": "1105225503835897858",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "My boy @osoav3 had an eye on me since 2014 🤕 need to watch out lil faggot https://t.co/FQbbKsaQG4",
+    "ocr_text": "Amir 45m ago CHAT",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105225503835897858.jpg"
+  },
+  {
+    "tweet_id": "1106971691266293761",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "@gbg_bucks @AyothatsB Hot Nigga https://t.co/9VXNLKnT1Z",
+    "ocr_text": "1978 HOOTE",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106971691266293761.jpg"
+  },
+  {
+    "tweet_id": "1108435349209010176",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "@jordanisntcool Really nigga? https://t.co/cz6Gnl7hlR",
+    "ocr_text": "TOH -OH # ER",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108435349209010176.jpg"
+  },
+  {
+    "tweet_id": "1108146422795382789",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "When a white person says Nigga https://t.co/IewCHfXCfu",
+    "ocr_text": "DRINKS WITN",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108146422795382789.jpg"
+  },
+  {
+    "tweet_id": "1114199439663484928",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "This nigga look like a myplayer with 5k vc 😭 https://t.co/7WQIRvwYEQ",
+    "ocr_text": "GOAT",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114199439663484928.jpg"
+  },
+  {
+    "tweet_id": "1108577527046524928",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Didn't I tell yall I was gone get this nigga for saying the N word??? https://t.co/CHMRz28aPm",
+    "ocr_text": "上+回 0 35% Tweet Michael @michaeldaddy51 This bitchi was suppose to get head from just robbed me with her man #nevertrustahoe ·20Mar19·TwitterforiPhone 651 Likes Tweet your reply",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108577527046524928.jpg"
+  },
+  {
+    "tweet_id": "1108751042773221378",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Hurry Up Weedman ..... It’s Not Even Finna Be Wake&amp;Bake Anymore Cause Ah Nigga Been Up 😒🤦🏾‍♂️😂 https://t.co/mG1BlZYrDr",
+    "ocr_text": "AMADEA FAMILY FUNERAL",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108751042773221378.jpg"
+  },
+  {
+    "tweet_id": "1041689833268236288",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "PinkNews: Why I'm not ashamed to be a faggot.   https://t.co/wlbaYqrwvR https://t.co/oQ6505CcoG",
+    "ocr_text": "PinkNews VIDEO",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1041689833268236288.jpg"
+  },
+  {
+    "tweet_id": "1107090931390386177",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Me: Facebook: good morning dyke https://t.co/82OqBO76G2",
+    "ocr_text": "@100% SamanthaChebatte,TaylahClarkeand 8 friendslikeHozier. Hozier Sponsored· My new album\"Wasteland,Baby!\"Is out now!Listen here.#WastelandBaby Buy At Official Listen on Listen now Store Spotify 217 25comments 5shares Like Comment Share",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107090931390386177.jpg"
+  },
+  {
+    "tweet_id": "1108937357774843907",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "can you imagine this nigga &amp; rygin king doing a show about exploring jamaica? https://t.co/O8L3eLIoBV",
+    "ocr_text": "BITE OF WEEK",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108937357774843907.jpg"
+  },
+  {
+    "tweet_id": "1043642474265227265",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "im screaming @ \"vikmor is sjw stony\" ifiadjfijak IM https://t.co/h6QHTNqnFi",
+    "ocr_text": "-Could you excuse me? [Screams]",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043642474265227265.jpg"
+  },
+  {
+    "tweet_id": "1109271796220604416",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "3 gatsu no lion? No nigga 4 gatsu Guts theme just came on stop playing https://t.co/kzcZ0DXouE",
+    "ocr_text": "My Mix YouTube Berserk soundtrack-4Gatsu 3.5M views =+ 32K 379 Share Download Save Ivory SUBSCRIBE 2.8K subscribers Mix-Berserk 50+ soundtrack -4 ((2) Gatsu YouTube·50+ videos Noragami Ost : - Misogi",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109271796220604416.jpg"
+  },
+  {
+    "tweet_id": "1109758012191883266",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "@AshDaGreatt You Never Met A Nigga Like Me Before https://t.co/z66NIM3H8M",
+    "ocr_text": "ODN Opening Mon Tue-Thus fri -Sal Sunday",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109758012191883266.jpg"
+  },
+  {
+    "tweet_id": "1061618612472107008",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Retard*d queen https://t.co/nyORP9fXOK",
+    "ocr_text": "SEL GO1 REVIVAL TOUR REVIV SELENA GOMEZ REVIVAL TOUR SELENA GOMEZ SELENA GOMEZ REVIVAL TOUR REVIVAL TOUR SELENA GOMEZ ENA REV MEZ ELENA VALTOUR OMEZ TOR ELF SE RE UR GOM SELEN REVIV GOME REVIVAL SELENA GOMEZ ELENA REVIVAL TOUR GOMEZ REVIVAL TOUR",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061618612472107008.jpg"
+  },
+  {
+    "tweet_id": "1058911342210486272",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "#BuildTheWall #FollowTheLaw #ProtectOurBorders 🇺🇸🇺🇸🇺🇸🇺🇸We Have A Caravan Too 🇺🇸🇺🇸🇺🇸🇺🇸 https://t.co/F62GBtTMHc",
+    "ocr_text": "WEHAVEA CARAVAN TOO @foramerica . .AIR FORCE",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058911342210486272.jpg"
+  },
+  {
+    "tweet_id": "1107756314929844225",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "😂😂😂 imagine the nigga pulled up on me twice and lost he got mad deleted me why pull up on me tf nmp https://t.co/gGR9wUf8zp",
+    "ocr_text": "debowkilla187 2 3/18/2019 Players debowkilla187 Now Playing Once pushing is done everyone is done. Messages YUNG CARTI UKER Gg bro Add Players debowkilla187 Chat in Party Ur bitch 4 pushin Hoe ass nigga Create Event Group Settings YUNG CARTI Lol yall take it to serious Enter Message Send Enter Back △Record Voice Message OPTIONs Options Menu YUNGCARTI",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107756314929844225.jpg"
+  },
+  {
+    "tweet_id": "1061400938362101762",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Best bumper sticker around. #tcot #border #BuildTheWall https://t.co/a2t9czsrfK",
+    "ocr_text": "-150 HEAVEN HASA WALLAND STRICT IMMIGRATION POLICIES. HELL HAS OPEN BORDERS.",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061400938362101762.jpg"
+  },
+  {
+    "tweet_id": "1117554067549634560",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "nigga out here lookin like go moisturize yo dry ass fake dork @Eugene3005 https://t.co/bYEBs7csla",
+    "ocr_text": "萧 抓 8",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1117554067549634560.jpg"
+  },
+  {
+    "tweet_id": "1057320100171145216",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "The Queers / Love Songs For the Retarded / Debra Jean / 2006 https://t.co/0tidjYyF60",
+    "ocr_text": "The Queers DLM Love Songs sfor the Retarded",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057320100171145216.jpg"
+  },
+  {
+    "tweet_id": "1058976103379931136",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "my re-imagining of Hannah as a Black-haired dyke! https://t.co/7yGn49xFCg",
+    "ocr_text": "91000 89",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058976103379931136.jpg"
+  },
+  {
+    "tweet_id": "1058717947768856576",
+    "stratum": "has_ocr_nothate",
+    "tweet_text": "Just got this from Groupon...obviously I have preferences set to CUNT https://t.co/oUCLAPgAf3",
+    "ocr_text": "59%13:48 ARBY FEATURED GOODS BEAUTY&WELLN The Mac Factory London 34%Off-Mac andCheese,Camdenand Euston London·2.7mi 1,000+bought £9£5.95 jamie' Jamie' Italian 22 locations·0.3mi 10,000+bought £22 Tap here to fill entire screen 乙 口 个",
+    "hard_label_binary": 0,
+    "hard_label_6class": 0,
+    "label_name": "nothate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058717947768856576.jpg"
+  },
+  {
+    "tweet_id": "1105856066640842754",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "@itsjaval Nigga got stabbed one too many times 😭😭 https://t.co/bS6G5UM84z",
+    "ocr_text": "HUMI RA fonday",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105856066640842754.jpg"
+  },
+  {
+    "tweet_id": "1106990652284375042",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "He frying this nigga 😭😭😭 https://t.co/fqB4B4ITB4",
+    "ocr_text": "CTON",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106990652284375042.jpg"
+  },
+  {
+    "tweet_id": "1056261443430027265",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "NIGGA JUST TOOK THE FATTEST L LMAO https://t.co/wlUfoRqd9f",
+    "ocr_text": "AIN' NOTHINBUT FU.…·8m Okay homophobe 2 ↑ ↑ -Girl Slayer @eboyArmpits·8m What...? ← AIN' NOTHIN BUT FU.….· 4m Desmond Etika Amofah 4 hrs don'teven care lmfaoooooo fuck itisuck dick 011 1 Share Like Share ↑ -Girl Slayer @eboyArmpits·4m How amla homophobe?",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056261443430027265.jpg"
+  },
+  {
+    "tweet_id": "1057069169433137154",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "Yasssssss   DNA TEST THAT CREEPY CONNIVING ASS NIGGA  #LHHH https://t.co/FRorxY2AnQ",
+    "ocr_text": "YAASS!!!",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057069169433137154.jpg"
+  },
+  {
+    "tweet_id": "1058548848296189952",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "@Shmallss I GOT CANDY MY NIGGA https://t.co/YSazBPb3Sw",
+    "ocr_text": "nadi CERR SRCAEE psan Re Reese' niniature HERSHEY MILK CHOCOLATE IT",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058548848296189952.jpg"
+  },
+  {
+    "tweet_id": "1114321566823800832",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "HE A FINE NIGGER https://t.co/SNNaAKOgMR",
+    "ocr_text": "SHOOKY Ed @LILMOODBOX BT21 Mumanization 8eisks",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114321566823800832.jpg"
+  },
+  {
+    "tweet_id": "1055309272630943744",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "#GamerGate are the only ones who know who was behind today’s mail bombs. https://t.co/jYlC7C1OE1",
+    "ocr_text": "IT ENDS TONIGHT",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1055309272630943744.jpg"
+  },
+  {
+    "tweet_id": "1054183183607103489",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "@IvankaTrump The white trash really love Daddy. https://t.co/T0LX3v9rAq",
+    "ocr_text": "Walmart Restrooms Customer Service WOMEN -FOR- TRUMP",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1054183183607103489.jpg"
+  },
+  {
+    "tweet_id": "1063446834474029057",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "POTUS Another day in the White House. Miles of wall built at the border? ZERO #BuildTheWall https://t.co/6g0EG0ezZT",
+    "ocr_text": "\"Strive not to be success, but rather to be of value.\" -Albert Einstein",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063446834474029057.jpg"
+  },
+  {
+    "tweet_id": "1113103781070286848",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "I be worried bout a check ✅💸 fuck a bitch or a nigga 🤷🏾‍♀️😂😋💯. https://t.co/WZZ7Dlz8wa",
+    "ocr_text": "100 Foreign bitchwithforeign breads",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113103781070286848.jpg"
+  },
+  {
+    "tweet_id": "1042361978386362370",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "LA nigger https://t.co/QDvYXExyXB",
+    "ocr_text": "EMILY ACCE MAVESTAR umf2 2Wempolo",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1042361978386362370.jpg"
+  },
+  {
+    "tweet_id": "1061470928524230656",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "What could’ve been. But no we took some mook ass nigga who can’t play basketball https://t.co/9ecFRX7JKY",
+    "ocr_text": "CSERIES LOS AWGFLES LOSANGELES AKERS BASKETBALL W1 LAKERS.COM",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061470928524230656.jpg"
+  },
+  {
+    "tweet_id": "1113109280431931393",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "nigga. WORD? https://t.co/VKLVV7IBve",
+    "ocr_text": "LIVE FROM LOS ANGELES,THI \"THE HERD\". 018",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113109280431931393.jpg"
+  },
+  {
+    "tweet_id": "1108180480816484352",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "@shy_warren Oh this nigga Is  hip hip https://t.co/m6SEvf3jrJ",
+    "ocr_text": "BET★",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108180480816484352.jpg"
+  },
+  {
+    "tweet_id": "1114758326741426177",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "Still no one knows this nigga https://t.co/UAlGIQ0x5v",
+    "ocr_text": "No Ammo",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114758326741426177.jpg"
+  },
+  {
+    "tweet_id": "1058209684924944384",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "#nowplaying The Redneck Manifesto - I Don't Speak the Monkey Language, I Just Hear It / Thirtysixstrings https://t.co/qoz6kkgQ8C",
+    "ocr_text": "THEREDNECKMANIFESTO:THIRTYSIXSTRINGS",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058209684924944384.jpg"
+  },
+  {
+    "tweet_id": "1116705030978117632",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "@ReignIsReal @BryanizUgly I’m fucking weak. this was that nigga Rob when he tweeted yesterday morning. https://t.co/vD5XSflXe0",
+    "ocr_text": "' hornyas HELLAND ' NOT GOING TO TAKEIT ANYMORE!!!",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116705030978117632.jpg"
+  },
+  {
+    "tweet_id": "1051164624924626944",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "Yal love playing the race card smh wuwhiiii. https://t.co/vvjmZNVQmi",
+    "ocr_text": "EXIT",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1051164624924626944.jpg"
+  },
+  {
+    "tweet_id": "1107660467990904832",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "Free my nigga Squirtle https://t.co/TRtFGZTbLu",
+    "ocr_text": "LIVE BREAKINGNEWS BREAKINGNEWS SQUIRTLESQUADDRIVE-BYSHOOTINGOBSERVEDINDOWNTOWNLATHISAFTERNOON NEXTUP:1O-YEAR-OLDKETCHUMSHARESTHESECRETTOHOW HEHASNOTAGEDIN THEPAST2OYEARS",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107660467990904832.jpg"
+  },
+  {
+    "tweet_id": "1058459208520101888",
+    "stratum": "has_ocr_racist",
+    "tweet_text": "get this white trash off my screen https://t.co/G9Az0OFFel",
+    "ocr_text": "FAIR @FAIRImmigration FAIR .@GilCisnerosCA ICE saves lives. ICE supports communities. ICE protects Americans.#SupportICE LICE OICE POLICE 0:09 AbolishIce? Tell Your Candidate: Tweet #SupportICE 20 26 64 7 Promoted（issue）",
+    "hard_label_binary": 1,
+    "hard_label_6class": 1,
+    "label_name": "racist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058459208520101888.jpg"
+  },
+  {
+    "tweet_id": "1109276852714008578",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Annoyed stepsis lets stepbro rock her tight twat https://t.co/su6gqaMBE8 https://t.co/P1sPHvu26G",
+    "ocr_text": "SISLOVING.COM",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109276852714008578.jpg"
+  },
+  {
+    "tweet_id": "1055977886295834624",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "It’s a crowded train, take off your fucking backpack you twat https://t.co/krVhxNzUdv",
+    "ocr_text": "trans",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1055977886295834624.jpg"
+  },
+  {
+    "tweet_id": "1062302842906652672",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "If you’re not following then you should be !! Proper funniest old cunt on twitter @OldManLikeRon https://t.co/aSYw9M8at1",
+    "ocr_text": "If your going to be CUNT Be goodCUNT Nobodylikes shitCUNT",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062302842906652672.jpg"
+  },
+  {
+    "tweet_id": "1110234243462909953",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Stars Maintain Lead In Wild Card Race | Stars Playoff Push - National Hockey League News - https://t.co/4nggGSt2S7 https://t.co/BLPk27L4dk",
+    "ocr_text": "YOFF PUS STARS PLAYOFF PUSH KATIE ENGLESON",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110234243462909953.jpg"
+  },
+  {
+    "tweet_id": "1051584525854302208",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Groom your twat. https://t.co/XWor3o2Yt4",
+    "ocr_text": "TATUAGENS INTERESSANTES",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1051584525854302208.jpg"
+  },
+  {
+    "tweet_id": "1063832289552011266",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "By: https://t.co/CSOjneVNSj Curvy MILF Veronica Avluv masturbates her big gaping twat and horny anal hole... https://t.co/VNeaTjFgCo",
+    "ocr_text": "EVILANGEL.COm",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063832289552011266.jpg"
+  },
+  {
+    "tweet_id": "1064309121904652288",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Five years ago today I was called a cunt online for meeting Lana Del Rey by her fans 😂❣️ https://t.co/gDB4J17dVB",
+    "ocr_text": "23% Your Memories on Facebook Pricilla, we care about you and the memories you share here.We thought you' like to look back on this Instagram post from 5 years ago. 5 Years Ago Save Today 10%Off Only you can see this unless you share it",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064309121904652288.jpg"
+  },
+  {
+    "tweet_id": "1110467566898561024",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "@mainvolume @TwutterSupport @Apple And it’s “Respect the Cock and tame the Cunt!” Dumbass...😂😂😂 https://t.co/ybXU7hiyHj",
+    "ocr_text": "Did anyone else see this?!",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110467566898561024.jpg"
+  },
+  {
+    "tweet_id": "1115370316023390209",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Via: https://t.co/f34GJPyh7u MILF babe with big tits Lisa Ann masturbating her cunt in the office... https://t.co/xzyX7tclR5",
+    "ocr_text": "Brazzers.com",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1115370316023390209.jpg"
+  },
+  {
+    "tweet_id": "1117648390018539520",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Alexis Texas gives head and gets her juicy cunt slammed tough https://t.co/rmXzrXakkZ",
+    "ocr_text": "我 WW .lollypops",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1117648390018539520.jpg"
+  },
+  {
+    "tweet_id": "1034869511575556096",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "The lads new boots. Size 7, the big footed twat...he's 13! https://t.co/GFMx4hftZ7",
+    "ocr_text": "PREDATOR PREDATOR",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1034869511575556096.jpg"
+  },
+  {
+    "tweet_id": "1056611951906902016",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "@kylegriffin1 Feel sorry for you guys for having an absolute twat as your president https://t.co/9EuAmH7mqh",
+    "ocr_text": "WRONG",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056611951906902016.jpg"
+  },
+  {
+    "tweet_id": "1108504108972105729",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "I’m a hoe. I’m texting a nigga while I’m in another nigga face. https://t.co/M1RcvKrqPr",
+    "ocr_text": "THE FRIGHT NIGHTFILES SATURDAYB/TC",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108504108972105729.jpg"
+  },
+  {
+    "tweet_id": "1108658788591120385",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Full Movie: https://t.co/eDmIZcbmCR Monique Alexander and Tori Black lick ass and twat after giving 3some BJ... https://t.co/gMjnR3mE7E",
+    "ocr_text": "DIGITALPLAYGROUND.COM",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108658788591120385.jpg"
+  },
+  {
+    "tweet_id": "1064315679975923715",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "#SurvivorSeries #WWE #NiaJax #Facebreaker fuck off cunt https://t.co/LnbsBsSjJV",
+    "ocr_text": "LIVE",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064315679975923715.jpg"
+  },
+  {
+    "tweet_id": "1053930592985903104",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Someone call him a cunt from me pls https://t.co/KITkVzROa2",
+    "ocr_text": "02-UK 09:46 7 1 24% ARCLAYS Monday Night Football beiN SPORTS 中 Richard Keys @richardajkeys @richardajkeysblocked you You are blocked from following @richardajkeys and viewing @richardajkeys' Tweets.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1053930592985903104.jpg"
+  },
+  {
+    "tweet_id": "1063886324267212801",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "#Peoplewhoneedagoodhiding  This cunt who didn't know that ORAL B did a toothpaste https://t.co/lkOWRCORUp",
+    "ocr_text": "OralB",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063886324267212801.jpg"
+  },
+  {
+    "tweet_id": "1064369036488773632",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "🔥 NEW CLIP 🔥 Gay Faggot for BBC @iWantClips  https://t.co/wQNUHlFTCw #Coercedbi #CumEatingInstructions #BratGirls https://t.co/HABBw6AZr8",
+    "ocr_text": "IWANILOSMISTRESS CUM resurrec",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064369036488773632.jpg"
+  },
+  {
+    "tweet_id": "1064304980960645121",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "Remember when Ellen stopped Demi because she tried to say cunt. 😂👏🏻 https://t.co/oYqQVryyCv",
+    "ocr_text": "0.0 5SECOND RULE Rellentube",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064304980960645121.jpg"
+  },
+  {
+    "tweet_id": "1113386844652072960",
+    "stratum": "has_ocr_sexist",
+    "tweet_text": "my nigga turnt up! https://t.co/URe4GSzLIh",
+    "ocr_text": "19:13 husslewestrose LIVE xanborghini joined husslewestrose waved at you Send areguesttobein Request husslewestrose' live video. 老 xanborghini my dude got the durag! xanborghini wassup holmes xanborghini bruh was just bumping that song too Comment",
+    "hard_label_binary": 1,
+    "hard_label_6class": 2,
+    "label_name": "sexist",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1113386844652072960.jpg"
+  },
+  {
+    "tweet_id": "1062072379051048962",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "@SHOPCHEAPYXO Ok but just know you still can’t say faggot. Queen https://t.co/oLihWEdrd8",
+    "ocr_text": "BALE VOTE VONL",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062072379051048962.jpg"
+  },
+  {
+    "tweet_id": "1050226940219719680",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Fellas, call me a faggot all you want BUT THIS SHIT SLAPS https://t.co/QWCO9ysikJ",
+    "ocr_text": "Butuay Gean ADVISORY EXPLICIT CONTENT Work **ch Britney Spears 4:0 1 □ Devices Available",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1050226940219719680.jpg"
+  },
+  {
+    "tweet_id": "1107033766239846400",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Nigga im damn near in this party rating a whole ass salad. #OrganicGang https://t.co/s0Jun2rVjs",
+    "ocr_text": "THEN 养",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107033766239846400.jpg"
+  },
+  {
+    "tweet_id": "1025173538276352002",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "this pool floatie cocktail just called me faggot https://t.co/knn1xxyAun",
+    "ocr_text": "MANTO mondonews Sponsored",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1025173538276352002.jpg"
+  },
+  {
+    "tweet_id": "1046018189329600512",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Let me be your sassy faggot. https://t.co/q7fPAQ8dPP",
+    "ocr_text": "Met'",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1046018189329600512.jpg"
+  },
+  {
+    "tweet_id": "1107814265992462336",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "GET CARRIED FAGGOT 10-0 @_Livry https://t.co/75FU1wFgmP",
+    "ocr_text": "0:50 1010 Livrys SreakyY Evrys VICTORY #1 ROYALE SzeakyYT SMALLSHIELDPOTION Swap 1001100 135 518",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107814265992462336.jpg"
+  },
+  {
+    "tweet_id": "1116852191627706368",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "up i can't make him a faggot idc what he does freak https://t.co/dimAfdu8cM",
+    "ocr_text": "Maybe if you cared when Marty was cheating on ·. you and put stop to it he wouldn' of left you few seconds ago",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1116852191627706368.jpg"
+  },
+  {
+    "tweet_id": "1110392966638530560",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "@AFP Good news!!! #BuildTheWall #MAGA https://t.co/Feu4Kbk1tv",
+    "ocr_text": "BUTLD WALL",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1110392966638530560.jpg"
+  },
+  {
+    "tweet_id": "1109499677433647107",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Just getting out the ring with mike Tyson knocked him out the faggot https://t.co/u1koqqEvU6",
+    "ocr_text": "Piss take these nose bleeds",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1109499677433647107.jpg"
+  },
+  {
+    "tweet_id": "1056778304215310336",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "SEXY BRA FAGGOT https://t.co/QoWrm0q5vJ",
+    "ocr_text": "·28% 回",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1056778304215310336.jpg"
+  },
+  {
+    "tweet_id": "1062314721980940289",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "@Deddys_boy @mreazi See this awuf faggot 😂😂 https://t.co/Uhn49Yyf3H",
+    "ocr_text": "nnww",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062314721980940289.jpg"
+  },
+  {
+    "tweet_id": "1024881972244443136",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Just sold a #clip! Rimming Faggot #CoercedGay Get yours on #iWantClips! https://t.co/13YRBNUcfQ https://t.co/oGXqKOENhS",
+    "ocr_text": "JUEEN Hot Juls Fetishes",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1024881972244443136.jpg"
+  },
+  {
+    "tweet_id": "1049896912638349314",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "hello this is dyke speaking https://t.co/mMS7VAn1a0",
+    "ocr_text": "Hamtol_E",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1049896912638349314.jpg"
+  },
+  {
+    "tweet_id": "1042214560181170177",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "Kodak black look like a dyke at a swimming party https://t.co/LTRuU5yq7t",
+    "ocr_text": "@vruthd LLRNO",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1042214560181170177.jpg"
+  },
+  {
+    "tweet_id": "1024647466031800320",
+    "stratum": "has_ocr_homophobe",
+    "tweet_text": "dumb ass reverse into my car thanks cunt I fkn hate the west 😡 https://t.co/EVpssYWNaw",
+    "ocr_text": "CWT·53W",
+    "hard_label_binary": 1,
+    "hard_label_6class": 3,
+    "label_name": "homophobe",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1024647466031800320.jpg"
+  },
+  {
+    "tweet_id": "1105525916548124672",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Some nigga shit y’all wouldn’t understand 😤💯 https://t.co/Q9kfrgXckk",
+    "ocr_text": "slavery Just some real nigga shit 'all wouldn' understand",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1105525916548124672.jpg"
+  },
+  {
+    "tweet_id": "1114286020797837312",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "@Scouse_ma Cunt her https://t.co/sqNxUP1gUl",
+    "ocr_text": "giffgaff 22:57 44% Tweet Soph&口 @soph_thfc Name bigger twat than Mo Salah. ' love to throw bacon sarnie at his litle muglswear 21:40·05/04/2019·TwitterforiPhone 31Retweets267Likes 口 ↑ Tweet your reply",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114286020797837312.jpg"
+  },
+  {
+    "tweet_id": "1044180593989357568",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Super religious people are truly retarded. I know god looks down and laughs at them like https://t.co/cD4QCOwz82",
+    "ocr_text": "WHO SAID THAT?",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1044180593989357568.jpg"
+  },
+  {
+    "tweet_id": "1106693947919863808",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Suspect? The terrorist cunt live streamed himself killing all those innocent people @SkyNews https://t.co/C9bBcm2eNA",
+    "ocr_text": "Unlocked ' 23:06 Friday 15 March sky SKY NEWS now news New Zealandmosque attack suspect BrentonTarrant pictured incourt",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106693947919863808.jpg"
+  },
+  {
+    "tweet_id": "1114063311954485249",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "BAPTIST ILLUMINATI POPE BACKGROUND ORPHANAGE MOMMIES. BUFFALO BOBS BFF. Right BURROW CUNT. https://t.co/2jovGSOUs4",
+    "ocr_text": "FROM GUILLERMO DELTORO AND CARLTON CUSE THE STRAIN 7/12 FX FEARLESS",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114063311954485249.jpg"
+  },
+  {
+    "tweet_id": "1107805963099082752",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Bitches swear because you’ve fucked the same nigga y’all are the same. https://t.co/Aix72KCyLc",
+    "ocr_text": "GIRL,BYE.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1107805963099082752.jpg"
+  },
+  {
+    "tweet_id": "1043124012925308929",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "The true Islam opposes terrorism unequivocally.   https://t.co/CjnvgR9P7M  #EnoughIsEnough #AMATEInitiative https://t.co/WUdItQ7Vmv",
+    "ocr_text": "ISLAMISPEACE NOTTERRORISM. Muslims are an integral part ofthe American fabric and we oppose extremism in any form www.AMATEinitiative.com #ENOUGHISENGUGH",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1043124012925308929.jpg"
+  },
+  {
+    "tweet_id": "1042447885386899458",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "@BrianKempGA #BanIslam FROM ATLANTA @staceyabrams https://t.co/TP6dziFmIh",
+    "ocr_text": "#MeTo STACEY ABRAMS GOVERNOR",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1042447885386899458.jpg"
+  },
+  {
+    "tweet_id": "1108415521534459911",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "You a silly nigga https://t.co/MFcINjbugd",
+    "ocr_text": "@CTHAGOD People say you're one of the worst artists of the last decade. @CTHAGOD Nigga' also say the Germans cremated 3,00o jews day for 51/2years,they pretty stoopid.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108415521534459911.jpg"
+  },
+  {
+    "tweet_id": "1058662427624202240",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "@Ginderella4 Cry Feminazi 😘 https://t.co/42LxmHEoaN",
+    "ocr_text": "(Oppression intensifies)",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058662427624202240.jpg"
+  },
+  {
+    "tweet_id": "1023962536549523461",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "@RCAllisonTN Well someone should pray for the cunt... he's going down. https://t.co/Um12BuEoyW",
+    "ocr_text": "DONT DOUBLE THE SHELTERTHE MILITARY DONT HOMELESS MARY FEEDTHE MAGDALENES POOR \"TEN THE SAVIOR WE'VEBEEN WAITING FOR! CHRISTIAN",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1023962536549523461.jpg"
+  },
+  {
+    "tweet_id": "1114297953097744386",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "@BIGNEECHl Nigga thought he was Calvin Candy, talmbout \"shake my hand\" foh https://t.co/pU1fjm6W1Z",
+    "ocr_text": "linsist.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1114297953097744386.jpg"
+  },
+  {
+    "tweet_id": "1034816067934347265",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Pakistan Islamists rally against anti-Islam cartoon contest https://t.co/6vnfM9q1nf #BanSharia #StopIslam https://t.co/MXpIBs9W23",
+    "ocr_text": "GERT WILDERS 小i 2 ル Jyi (PT） 心",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1034816067934347265.jpg"
+  },
+  {
+    "tweet_id": "1106619029215576064",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "For fucks sake.  This is a thing that is happening now.  Thanks, you fucking trigger-happy loose cunt. https://t.co/zyF0izWG3M",
+    "ocr_text": "Photo via @onlyintunisia Worldnews Muslims share beautifully mundane stories from their mosques In light of the way some media outlets are covering the Christchurch shootings, Rami lsmail (@tha_rami) has people sharing #PeacefulMosques stories.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106619029215576064.jpg"
+  },
+  {
+    "tweet_id": "1106552754430971904",
+    "stratum": "has_ocr_religion",
+    "tweet_text": "Me when nigga finally let's me be the big spoon https://t.co/sUjAdMSSqM",
+    "ocr_text": "mc Ate Ch",
+    "hard_label_binary": 1,
+    "hard_label_6class": 4,
+    "label_name": "religion",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1106552754430971904.jpg"
+  },
+  {
+    "tweet_id": "1062125442608611333",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "MIA UNBLOCK ME U FAT CUNT https://t.co/PJwUQuW6r7",
+    "ocr_text": "18:29 12% 中 miax @lettersbesson @lettersbesson blocked you You are blocked from following @lettersbesson and viewing @lettersbesson' Tweets.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1062125442608611333.jpg"
+  },
+  {
+    "tweet_id": "1041918275242876928",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "And this docile bint is meant to be sorting Brexit.  Ha ha ha yeah, right! https://t.co/0XjzyzRqMf",
+    "ocr_text": "REMEMBERTHATTIMEILOST 144FILESOFTHE WESTMINSTER PAEDOPHILEDOSSIER?",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1041918275242876928.jpg"
+  },
+  {
+    "tweet_id": "1057271206653710337",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "THIS NIGGA WILDIN GET THE FUCK OUTTA HERE LMAO https://t.co/XnXzoyF1xw",
+    "ocr_text": "RED DEAD ROCKSTARGAMESPRESENTS 2 REDEMPTION REDDEADREDEMPTION2REVIEWS ARELIES!REDDEADREDEMPTION2 SUCKS!ROCKSTARGAMESSUCKS! 5,558 views 163 385 Share Download Save youngdefiant SUBSCRIBE 6,943 subscribers PublishedonOct25,2018 Red Dead Redemption2Sucks-RedDead Redemption2ReviewAre Lies-Do Not BuyRed Dead Redemption 2,the game sucks.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057271206653710337.jpg"
+  },
+  {
+    "tweet_id": "1108082672813903873",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "@robreiner Hear ye, Hear ye, and a Happy Fuck You!!! White Trash Hollywood Scum. https://t.co/D1fM6Y3ag7",
+    "ocr_text": "WAIT,ANOTHER CELEBRITY IS ABOUT TO SHARE THEIR POLITICAL VIEWS",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1108082672813903873.jpg"
+  },
+  {
+    "tweet_id": "1061292868533436417",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Imagine just smoking the cigarette without taking a pic like a retarded human being!!!!!!!! https://t.co/jMFCXXL3Xd",
+    "ocr_text": "IMAGINATION",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1061292868533436417.jpg"
+  },
+  {
+    "tweet_id": "1057682588515602434",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "@realDonaldTrump Trump you are really Severely retarded, what is positive you goes you quite Big cursed Thick Fired! https://t.co/wzlfowhUAH",
+    "ocr_text": "TIB JAB",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057682588515602434.jpg"
+  },
+  {
+    "tweet_id": "1058820973514973184",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Y’all retarded 😒 https://t.co/7tULwx7aR8",
+    "ocr_text": "KEEPINGUPWITE THEKARDASHIANS BRANDNEW aKUWTK",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058820973514973184.jpg"
+  },
+  {
+    "tweet_id": "1057011276260491265",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "@standardnews They went full retard https://t.co/t36SW4Wi04",
+    "ocr_text": "Never go full retard.",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1057011276260491265.jpg"
+  },
+  {
+    "tweet_id": "1063670605201985536",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "@DailyLoudTracks To the Trailer Trash trying to come for Iggy never even heard of her at that.. https://t.co/QUTm1GSGk5",
+    "ocr_text": "don' know her af",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1063670605201985536.jpg"
+  },
+  {
+    "tweet_id": "1037058683098877952",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Nike doesn’t care about losing trailer trash Trump fans who spew ignorance. #SorryNotSorry https://t.co/TJSC2mpDip",
+    "ocr_text": "Ti OuknOw #LNSM",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1037058683098877952.jpg"
+  },
+  {
+    "tweet_id": "1024304574683860992",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "7800$ $BTC you better fucking hold on the H4 close you cunt or this shit could get real nasty real fast. https://t.co/PSlnhoolNo",
+    "ocr_text": "重 Smells like opportunity. FOX",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1024304574683860992.jpg"
+  },
+  {
+    "tweet_id": "1036167864657616897",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Video - SJW Culture is RUINING GAMING - https://t.co/zjKHxFTyCs #metoo #timesup #news https://t.co/Kx4KnlQ3fO",
+    "ocr_text": "SJW CULTURE HURTING GAMING",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1036167864657616897.jpg"
+  },
+  {
+    "tweet_id": "1064226242411544582",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Back from my twitter ban for calling liberals retarded and comparing their talking points to Hitler's? https://t.co/CqPWqV0CBv",
+    "ocr_text": "\"We are socialists, we are enemies oftoday' capitalisticeconomic system fortheexploitation ofthe economically weak,with its unfair salaries,with its unseemly evaluation ofa human being according to wealth and property instead ofresponsibility and performance, and we are determined to destroy this system under all conditions. ~AdolfHitlerMay1,1927",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064226242411544582.jpg"
+  },
+  {
+    "tweet_id": "1064315259450785792",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "Players act retarded can’t play defense another L https://t.co/Zz6NfxphZs",
+    "ocr_text": "SPURS 2!",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1064315259450785792.jpg"
+  },
+  {
+    "tweet_id": "1058471503853957120",
+    "stratum": "has_ocr_otherhate",
+    "tweet_text": "@Lisa77121740 @ItsMeCathi #ahaahaa triggered by a Latina who isn't a leftist retard #NPCsArePathetic https://t.co/fBFCyq8na5",
+    "ocr_text": "Trigger Skating",
+    "hard_label_binary": 1,
+    "hard_label_6class": 5,
+    "label_name": "otherhate",
+    "img_path": "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset/img_resized/1058471503853957120.jpg"
+  }
+]
