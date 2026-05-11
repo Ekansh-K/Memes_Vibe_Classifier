@@ -20,17 +20,27 @@ def get_base_transforms(img_size: int = 224) -> transforms.Compose:
     ])
 
 
-def get_train_transforms(img_size: int = 224) -> transforms.Compose:
-    """Training transforms with gentle augmentation.
+def get_train_transforms(
+    img_size: int = 224,
+    use_random_erasing: bool = True,
+) -> transforms.Compose:
+    """Training transforms with augmentation.
 
     Uses scale=(0.8, 1.0) for RandomResizedCrop — aggressive cropping
     (default 0.08-1.0) risks removing text overlays on meme images,
     destroying the OCR signal that's critical for hate speech detection.
+
+    RandomErasing scale=(0.02, 0.15) similarly kept small to preserve text.
     """
-    return transforms.Compose([
+    t = [
         transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05),
         transforms.ToTensor(),
         transforms.Normalize(mean=CLIP_MEAN, std=CLIP_STD),
-    ])
+    ]
+    if use_random_erasing:
+        # value=0 erases to black (close to zero-mean after normalise)
+        t.append(transforms.RandomErasing(p=0.3, scale=(0.02, 0.15), ratio=(0.3, 3.3), value=0))
+    return transforms.Compose(t)
+

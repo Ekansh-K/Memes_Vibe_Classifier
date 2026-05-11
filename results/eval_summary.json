@@ -1,0 +1,26 @@
+[
+  {
+    "model":"qwen3_8b_fp16",
+    "prompt":"prompt_1",
+    "n":200,
+    "avg_time_s":10.11,
+    "avg_len_chars":542.0,
+    "empty_pct":0.0
+  },
+  {
+    "model":"qwen3_8b_fp16",
+    "prompt":"prompt_2",
+    "n":200,
+    "avg_time_s":6.46,
+    "avg_len_chars":331.0,
+    "empty_pct":0.0
+  },
+  {
+    "model":"qwen3_8b_fp16",
+    "prompt":"prompt_3",
+    "n":200,
+    "avg_time_s":6.93,
+    "avg_len_chars":369.0,
+    "empty_pct":0.0
+  }
+]

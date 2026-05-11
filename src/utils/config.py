@@ -7,17 +7,24 @@ import yaml
 
 
 # ── Project paths (always relative to PROJECT_ROOT) ──────────────────────────
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATASET_DIR = PROJECT_ROOT / "dataset"
-GT_FILE = DATASET_DIR / "MMHS150K_GT.json"
-IMG_DIR = DATASET_DIR / "img_resized"
-OCR_DIR_OLD = DATASET_DIR / "img_txt"
-OCR_DIR_NEW = DATASET_DIR / "img_txt_new"
-OCR_CONSOLIDATED = DATASET_DIR / "ocr_consolidated.json"
+import os as _os
+
+PROJECT_ROOT = Path(_os.environ.get("MMHS_PROJECT_ROOT", str(Path(__file__).resolve().parents[2])))
+
+# Data directory: can be overridden to point at a read-only Kaggle input path
+# while PROJECT_ROOT (checkpoints, results, caches) stays on writable storage.
+_DATA_DIR_ENV = _os.environ.get("MMHS_DATA_DIR")
+DATASET_DIR = Path(_DATA_DIR_ENV) if _DATA_DIR_ENV else PROJECT_ROOT / "dataset"
+
+GT_FILE              = DATASET_DIR / "MMHS150K_GT.json"
+IMG_DIR              = DATASET_DIR / "img_resized"
+OCR_DIR_OLD          = DATASET_DIR / "img_txt"
+OCR_DIR_NEW          = DATASET_DIR / "img_txt_new"
+OCR_CONSOLIDATED     = DATASET_DIR / "ocr_consolidated.json"
 PROCESSED_LABELS_FILE = DATASET_DIR / "processed_labels.json"
-SPLITS_DIR = DATASET_DIR / "splits"
-CHECKPOINTS_DIR = PROJECT_ROOT / "checkpoints"
-RESULTS_DIR = PROJECT_ROOT / "results"
+SPLITS_DIR           = DATASET_DIR / "splits"
+CHECKPOINTS_DIR      = PROJECT_ROOT / "checkpoints"
+RESULTS_DIR          = PROJECT_ROOT / "results"
 
 # ── Dataset constants ────────────────────────────────────────────────────────
 NUM_CLASSES_BINARY = 2

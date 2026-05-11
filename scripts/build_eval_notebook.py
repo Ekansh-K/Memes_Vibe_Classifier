@@ -9,7 +9,7 @@ What's in this notebook:
 import json
 from pathlib import Path
 
-DATASET_PATH = "/kaggle/input/mmhs150k-full"   # ← update slug to match your upload
+DATASET_PATH = "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset"   # ← update slug to match your upload
 OUT_NB = Path(__file__).parent.parent / "notebooks" / "vlm_caption_eval_kaggle.ipynb"
 
 CELLS_RAW = [
@@ -41,7 +41,7 @@ from collections import Counter
 # ─────────────────────────────────────────────────────────────────────────────
 # ADJUSTABLE: path to your codebase inside /kaggle/working/
 # e.g. if you unzipped EndSem_Project.zip → /kaggle/working/EndSem_Project
-CODEBASE_DIR = Path('/kaggle/working/EndSem_Project')
+CODEBASE_DIR = Path('/kaggle/working/Memes_Vibe_Classifier')
 # ─────────────────────────────────────────────────────────────────────────────
 
 sys.path.insert(0, str(CODEBASE_DIR))
@@ -242,10 +242,29 @@ print('Helpers loaded.')
 # A3 — Qwen3-VL-8B-Instruct FP16  device_map='auto' (both T4 GPUs)
 # CONFIRMED WORKING API (vram_test_corrected.ipynb):
 #   Class : AutoModelForImageTextToText
-#   Unpack: image_inputs, video_inputs, video_kwargs = process_vision_info(
-#               messages, return_video_kwargs=True)   ← 3 values NOT 2
-#   VRAM  : ~8.9 GB GPU0 + 8.8 GB GPU1 = 17.7 GB  |  4.8 s/image
+#   Unpack: image_inputs, video_inputs = process_vision_info(
+#               messages, image_patch_size=...) + do_resize=False
+#   VRAM  : ~14 GB GPU0 + 9 GB GPU1 = 17.5 GB  |  ~2.2 s/image
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import os
+os.environ['PYTORCH_ALLOC_CONF'] = 'expandable_segments:True'
+
+# ── Force-clear any model left in GPU from a previous crashed run ──────────
+try:
+    del model
+except NameError:
+    pass
+try:
+    del processor
+except NameError:
+    pass
+free_vram()
+print('[VRAM] Cleared. GPU state before load:')
+for i in range(torch.cuda.device_count()):
+    alloc = torch.cuda.memory_allocated(i) / 1e9
+    total = torch.cuda.get_device_properties(i).total_memory / 1e9
+    print(f'  GPU{i}: {alloc:.2f} / {total:.1f} GB used')
 
 MODEL_TAG = 'qwen3_8b_fp16'
 MODEL_ID  = 'Qwen/Qwen3-VL-8B-Instruct'
@@ -262,9 +281,10 @@ else:
     model = AutoModelForImageTextToText.from_pretrained(
         MODEL_ID, torch_dtype=torch.float16, device_map='auto',
     ).eval()
-    processor = AutoProcessor.from_pretrained(
-        MODEL_ID, min_pixels=256 * 256, max_pixels=448 * 448,
-    )
+    # Load processor WITHOUT min/max_pixels — let process_vision_info handle
+    # resizing via image_patch_size so we can pass do_resize=False below
+    processor = AutoProcessor.from_pretrained(MODEL_ID)
+
     for i in range(torch.cuda.device_count()):
         alloc = torch.cuda.memory_allocated(i) / 1e9
         total = torch.cuda.get_device_properties(i).total_memory / 1e9
@@ -281,13 +301,23 @@ else:
             text_in = processor.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
-            image_inputs, video_inputs, video_kwargs = process_vision_info(
-                messages, return_video_kwargs=True
+            # 2-value unpack with image_patch_size — process_vision_info
+            # pre-resizes images to the correct patch grid.
+            # Confirmed fast path from vram_test_corrected.ipynb (~2.2s/img)
+            image_inputs, video_inputs = process_vision_info(
+                messages,
+                image_patch_size=processor.image_processor.patch_size,
             )
+            # do_resize=False: process_vision_info already resized — skip
+            # the redundant processor resize that causes ~11s/image slowdown
             inputs = processor(
-                text=[text_in], images=image_inputs, videos=video_inputs,
-                padding=True, return_tensors='pt', **video_kwargs,
-            ).to(next(model.parameters()).device)
+                text=[text_in],
+                images=image_inputs,
+                videos=video_inputs,
+                padding=True,
+                do_resize=False,
+                return_tensors='pt',
+            ).to(model.device)
 
             t0 = time.time()
             with torch.no_grad():
@@ -307,7 +337,102 @@ else:
     free_vram()
 """),
 
-# ── 8: summary table ──────────────────────────────────────────────────────────
+# ── 8: A3 Prompt 4 — conditional hate (separate cell) ────────────────────────
+("code", """\
+# ── Prompt 4: Conditional Hate Description ───────────────────────────────────
+# Designed to avoid the prompt-induced bias found in P2/P3 (which flagged
+# hate-related language in 68-100% of ALL images regardless of content).
+#
+# Key design choices:
+#   1. Leads with pure visual description (same as P1)
+#   2. ONLY adds a hate sentence IF the content clearly warrants it
+#   3. Explicitly instructs the model NOT to add any hate commentary
+#      if none is clearly present — prevents boilerplate "no hate found" text
+#   4. max_new_tokens=100 caps output at ~400 chars for faster inference
+
+PROMPT_4_TAG  = 'qwen3_8b_fp16'
+PROMPT_4_NAME = 'prompt_4'
+PROMPT_4_TEXT = (
+    'Describe what you see in this image in 1-2 factual sentences covering '
+    'the people, objects, any visible text, and the overall setting. '
+    'If and only if the image clearly contains explicit hate symbols, '
+    'racial slurs, or violent/sexual imagery, add one final sentence noting '
+    'this specifically. '
+    'Do NOT add any moderation commentary, disclaimers, or hate-related '
+    'statements if none of these are clearly present — just stop after '
+    'the visual description.'
+)
+
+out_file = EVAL_DIR / f'{PROMPT_4_TAG}_{PROMPT_4_NAME}.json'
+
+if out_file.exists():
+    print(f'[SKIP] {out_file.name} already exists.')
+else:
+    # Reload model if it was freed by the previous cell
+    try:
+        model
+        print('[INFO] Reusing model already in memory.')
+    except NameError:
+        import os, torch
+        from PIL import Image
+        from tqdm.notebook import tqdm
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+        from qwen_vl_utils import process_vision_info
+        os.environ['PYTORCH_ALLOC_CONF'] = 'expandable_segments:True'
+        MODEL_ID = 'Qwen/Qwen3-VL-8B-Instruct'
+        print(f'Reloading {MODEL_ID} FP16 ...')
+        model = AutoModelForImageTextToText.from_pretrained(
+            MODEL_ID, torch_dtype=torch.float16, device_map='auto',
+        ).eval()
+        processor = AutoProcessor.from_pretrained(MODEL_ID)
+        for i in range(torch.cuda.device_count()):
+            alloc = torch.cuda.memory_allocated(i) / 1e9
+            total = torch.cuda.get_device_properties(i).total_memory / 1e9
+            print(f'  GPU{i}: {alloc:.1f} / {total:.1f} GB')
+
+    captions = {}
+    for item in tqdm(sample, desc=f'{PROMPT_4_TAG}/{PROMPT_4_NAME}'):
+        img = Image.open(item['img_path']).convert('RGB')
+        messages = [{'role': 'user', 'content': [
+            {'type': 'image', 'image': img},
+            {'type': 'text',  'text':  PROMPT_4_TEXT},
+        ]}]
+        text_in = processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        image_inputs, video_inputs = process_vision_info(
+            messages,
+            image_patch_size=processor.image_processor.patch_size,
+        )
+        inputs = processor(
+            text=[text_in],
+            images=image_inputs,
+            videos=video_inputs,
+            padding=True,
+            do_resize=False,
+            return_tensors='pt',
+        ).to(model.device)
+
+        t0 = time.time()
+        with torch.no_grad():
+            # max_new_tokens=100 ≈ 400 chars — faster than P1 (150 tokens)
+            out_ids = model.generate(**inputs, max_new_tokens=100)
+        elapsed = time.time() - t0
+
+        prompt_len = inputs['input_ids'].shape[1]
+        caption = processor.decode(
+            out_ids[0][prompt_len:], skip_special_tokens=True
+        ).strip()
+        captions[item['tweet_id']] = {
+            'caption': caption, 'elapsed_s': round(elapsed, 3),
+        }
+
+    save_results(PROMPT_4_TAG, PROMPT_4_NAME, captions)
+    del model, processor
+    free_vram()
+"""),
+
+# ── 9: summary table ──────────────────────────────────────────────────────────
 ("code", """\
 import pandas as pd
 

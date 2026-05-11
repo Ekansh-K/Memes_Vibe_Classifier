@@ -1,0 +1,54 @@
+[
+  {
+    "config": "1. tweet_only",
+    "macro_f1_mean": 0.4219,
+    "macro_f1_std": 0.0275,
+    "per_class_f1": {
+      "nothate": 0.2738,
+      "racist": 0.341,
+      "sexist": 0.4658,
+      "homophobe": 0.6719,
+      "religion": 0.2889,
+      "otherhate": 0.4902
+    }
+  },
+  {
+    "config": "2. tweet + ocr",
+    "macro_f1_mean": 0.3888,
+    "macro_f1_std": 0.0372,
+    "per_class_f1": {
+      "nothate": 0.238,
+      "racist": 0.3306,
+      "sexist": 0.4241,
+      "homophobe": 0.6983,
+      "religion": 0.2049,
+      "otherhate": 0.4367
+    }
+  },
+  {
+    "config": "3. tweet + ocr + P4_raw",
+    "macro_f1_mean": 0.2747,
+    "macro_f1_std": 0.0558,
+    "per_class_f1": {
+      "nothate": 0.273,
+      "racist": 0.2626,
+      "sexist": 0.4303,
+      "homophobe": 0.3083,
+      "religion": 0.1111,
+      "otherhate": 0.263
+    }
+  },
+  {
+    "config": "4. tweet + ocr + P4_cln",
+    "macro_f1_mean": 0.2709,
+    "macro_f1_std": 0.0774,
+    "per_class_f1": {
+      "nothate": 0.1959,
+      "racist": 0.2731,
+      "sexist": 0.4397,
+      "homophobe": 0.28,
+      "religion": 0.13,
+      "otherhate": 0.3067
+    }
+  }
+]

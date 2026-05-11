@@ -1,135 +1,182 @@
 """
-Generates the bulk VLM captioning notebook for Kaggle.
+Generates vlm_bulk_caption_kaggle.ipynb — A4 full-scale captioning.
 
-This notebook:
-  1. Reads ocr_consolidated.json (uploaded as a second Kaggle input dataset)
-  2. Identifies the ~67K images that still have no OCR text (value == "")
-  3. Runs Qwen3-VL-8B-Instruct FP16 on those images only
-  4. Saves vlm_captions.json -> /kaggle/working/vlm_captions.json
+Correct numbers (verified 2026-05-03 after re-running A2 on full 150K):
+  - ocr_consolidated_filtered.json : 150,000 entries
+  - Has OCR text (skip)            : 70,744
+  - No OCR text -> need VLM        : 79,256 (all have image files)
+  - At ~4s/img: ~88h = ~8 Kaggle sessions of 12h
 
-API: confirmed working from vram_test_corrected.ipynb (Kaggle dual-T4 run)
-  - Class: AutoModelForImageTextToText
-  - process_vision_info: 3-value unpack with return_video_kwargs=True
-  - Device: next(model.parameters()).device
-  - Processor: min_pixels=256*256, max_pixels=448*448
+API (confirmed fast path from vram_test_corrected.ipynb):
+  - AutoModelForImageTextToText, device_map='auto'
+  - process_vision_info(messages, image_patch_size=...) — 2-value unpack
+  - do_resize=False  (prevents 11s/img slowdown)
+  - processor loaded WITHOUT min/max_pixels
+  - .to(model.device)
 """
 import json
 from pathlib import Path
 
-BASE_DS  = "/kaggle/input/datasets/victorcallejasf/multimodal-hate-speech"
-# ocr_consolidated.json is uploaded as a second Kaggle input dataset
-# Adjust the slug if you rename it when uploading
-OCR_DS   = "/kaggle/input/mmhs150k-ocr-consolidated"
-
-OUT_NB   = Path(__file__).parent.parent / "notebooks" / "vlm_bulk_caption_kaggle.ipynb"
+DATASET_PATH = "/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset"
+OUT_NB = Path(__file__).parent.parent / "notebooks" / "vlm_bulk_caption_kaggle.ipynb"
 
 CELLS_RAW = [
 
-# 0 ── markdown ────────────────────────────────────────────────────────────────
+# ── 0: markdown ───────────────────────────────────────────────────────────────
 ("markdown", """\
-# MMHS150K — Bulk VLM Captioning (Qwen3-VL-8B FP16)
+# MMHS150K — A4 Bulk VLM Captioning (Qwen3-VL-8B FP16)
 
-**Goal**: Generate image descriptions for the ~67K images that have no OCR text
-after running PaddleOCR locally (55% coverage → 100% coverage).
+**Goal**: Generate image descriptions (Prompt 1) for all **79,256** images
+that have no OCR text after A2 filtering — the only non-tweet signal for these
+images in the downstream 6-class hate speech classifier.
 
-**Inputs**:
-- `victorcallejasf/multimodal-hate-speech` — base dataset (images)
-- `mmhs150k-ocr-consolidated` — your locally-improved `ocr_consolidated.json`
-  (upload this as a Kaggle dataset before running)
+**Input**: Your uploaded dataset (slug: `updated-hate-speech-dataset`)
+containing `ocr_consolidated_filtered.json` (150K entries) and `img_resized/`
 
 **Output**: `/kaggle/working/vlm_captions.json`
-  Format: `{tweet_id: {"caption": "...", "elapsed_s": 4.8}}`
+Format: `{tweet_id: {"caption": "...", "elapsed_s": 3.8}}`
 
-**Model**: Qwen3-VL-8B-Instruct FP16, `device_map='auto'` (dual T4, ~17GB)
-**API**: confirmed working from `vram_test_corrected.ipynb`
+**Checkpoint**: `/kaggle/working/vlm_captions_progress.json` — saved every
+100 images using atomic write (temp file → rename) to prevent corruption on kill.
+
+**Model**: Qwen3-VL-8B-Instruct FP16, `device_map='auto'` (dual T4 ~17.5GB)
+**API**: fast path from `vram_test_corrected.ipynb` (~2–4s/img)
+
+> ⚠️ At ~4s/image × 79,256 images = **~88h total = ~8 Kaggle sessions**.
+> Run → checkpoint fills → download checkpoint → start next session → it resumes.
 """),
 
-# 1 ── install ─────────────────────────────────────────────────────────────────
+# ── 1: install ────────────────────────────────────────────────────────────────
 ("code", """\
 !pip install -q 'transformers>=4.57.0' bitsandbytes accelerate 'qwen_vl_utils>=0.0.14' Pillow tqdm
 print('done')
 """),
 
-# 2 ── config ──────────────────────────────────────────────────────────────────
+# ── 2: paths & config ─────────────────────────────────────────────────────────
 ("code", f"""\
-import json, gc, time, os
+import json, gc, os, time, tempfile
 from pathlib import Path
 
-# ── dataset paths ─────────────────────────────────────────────────────────────
-BASE_DS   = Path('{BASE_DS}')
-OCR_DS    = Path('{OCR_DS}')
-WORK_DIR  = Path('/kaggle/working')
+# Expand VRAM segments to reduce fragmentation-related OOM on long runs
+os.environ['PYTORCH_ALLOC_CONF'] = 'expandable_segments:True'
 
-IMG_DIR   = BASE_DS / 'img_resized'
-OCR_JSON  = OCR_DS  / 'ocr_consolidated.json'   # your locally-improved file
+# ── Dataset paths ──────────────────────────────────────────────────────────────
+INPUT_DIR  = Path('{DATASET_PATH}')
+WORK_DIR   = Path('/kaggle/working')
 
-OUT_FILE  = WORK_DIR / 'vlm_captions.json'
-PROG_FILE = WORK_DIR / 'vlm_captions_progress.json'  # checkpoint every N images
+IMG_DIR    = INPUT_DIR / 'img_resized'
+OCR_FILE   = WORK_DIR / 'ocr_filtered.json'                 # full 150K file from eval notebook A2
 
-# ── model ─────────────────────────────────────────────────────────────────────
-MODEL_ID  = 'Qwen/Qwen3-VL-8B-Instruct'
+OUT_FILE   = WORK_DIR / 'vlm_captions.json'                # final output (written at end)
+CKPT_FILE  = WORK_DIR / 'vlm_captions_progress.json'       # live checkpoint (every 100 imgs)
+ERR_FILE   = WORK_DIR / 'vlm_captions_errors.json'         # failed IDs across sessions
 
-# ── prompt (single, optimised for hate-speech context) ────────────────────────
+# ── Model ─────────────────────────────────────────────────────────────────────
+MODEL_ID   = 'Qwen/Qwen3-VL-8B-Instruct'
+
+# ── Prompt 1: pure visual description, no hate commentary ────────────────────
+# Concise instructions — avoids verbose output that wastes tokens and inference time.
+# Critically does NOT ask about hate/offensive content, which causes the model
+# to add "no hate found" boilerplate that corrupts downstream classifier training.
 PROMPT = (
-    'Describe this social media image briefly and factually in 1-2 sentences. '
-    'Note any visible text, people, symbols, logos, memes, or potentially '
-    'harmful/offensive content. Be objective.'
+    'Describe what you see in this image in 1-2 short sentences. '
+    'Cover the main subjects, objects, any visible text, and the setting. '
+    'Be factual and concise — do not over-explain or add commentary.'
 )
 
-# ── batching ─────────────────────────────────────────────────────────────────
-BATCH_SIZE       = 1      # Qwen3-VL works best with batch=1 for mixed-size images
-SAVE_EVERY       = 500    # checkpoint every 500 images
-MAX_NEW_TOKENS   = 120    # caption length cap
+# ── Inference settings ─────────────────────────────────────────────────────────
+MAX_NEW_TOKENS = 100    # ~400 chars cap — keeps captions concise, inference faster
+SAVE_EVERY     = 100    # checkpoint every 100 images (atomic write, crash-safe)
 
-# ── verify paths ─────────────────────────────────────────────────────────────
-for p in [IMG_DIR, OCR_JSON]:
-    print(f"  {{'OK' if p.exists() else 'MISSING'}}: {{p}}")
+# ── Verify all required paths exist before proceeding ─────────────────────────
+print('Path verification:')
+all_ok = True
+for p in [INPUT_DIR, IMG_DIR, OCR_FILE]:
+    ok = p.exists()
+    if not ok:
+        all_ok = False
+    print(f'  [{{"OK" if ok else "MISSING"}}] {{p}}')
+if not all_ok:
+    raise FileNotFoundError('One or more required paths are MISSING. Fix paths before continuing.')
+print()
+print(f'Output checkpoint : {{CKPT_FILE}}')
+print(f'Final output      : {{OUT_FILE}}')
 """),
 
-# 3 ── load OCR, find missing IDs ─────────────────────────────────────────────
+# ── 3: identify no-OCR images ─────────────────────────────────────────────────
 ("code", """\
-print('Loading ocr_consolidated.json ...')
-with open(OCR_JSON, encoding='utf-8') as f:
-    ocr = json.load(f)
+print('Loading ocr_consolidated_filtered.json ...')
+with open(OCR_FILE, encoding='utf-8') as f:
+    ocr_filtered = json.load(f)
 
-total      = len(ocr)
-have_text  = {tid for tid, txt in ocr.items() if str(txt).strip()}
-need_text  = {tid for tid, txt in ocr.items() if not str(txt).strip()}
+total_entries = len(ocr_filtered)
+have_text = [tid for tid, txt in ocr_filtered.items() if str(txt).strip()]
+need_text = [tid for tid, txt in ocr_filtered.items() if not str(txt).strip()]
 
-# only keep IDs whose image actually exists on disk
-need_text = {tid for tid in need_text if (IMG_DIR / f'{tid}.jpg').exists()}
+print(f'  Total entries in OCR file  : {total_entries:,}')
+print(f'  Have OCR text (skip VLM)   : {len(have_text):,}  ({len(have_text)/total_entries*100:.1f}%)')
+print(f'  No OCR text -> need VLM    : {len(need_text):,}  ({len(need_text)/total_entries*100:.1f}%)')
+print()
 
-print(f'  Total entries    : {total:,}')
-print(f'  Already have OCR : {len(have_text):,}  ({100*len(have_text)/total:.1f}%)')
-print(f'  Need VLM caption : {len(need_text):,}  ({100*len(need_text)/total:.1f}%)')
+# Scan img_resized/ directory ONCE and build a set of available IDs.
+# Much faster than calling path.exists() ~79K times individually
+# (each .exists() is a syscall; 79K calls takes several minutes on Kaggle).
+print('Scanning img_resized/ for available images (one-time scan)...')
+existing_ids = {p.stem for p in IMG_DIR.iterdir() if p.suffix == '.jpg'}
+print(f'  Images on disk             : {len(existing_ids):,}')
 
-# Convert to a sorted list so runs are deterministic / resumable
-need_ids = sorted(need_text)
-print(f'  Image files found: {len(need_ids):,}')
+need_with_img = [tid for tid in need_text if tid in existing_ids]
+missing_img   = [tid for tid in need_text if tid not in existing_ids]
+print(f'  Need VLM + image exists    : {len(need_with_img):,}')
+if missing_img:
+    print(f'  WARNING: {len(missing_img):,} no-OCR IDs have no image on disk — will be skipped')
+
+# Sorted for deterministic, resumable order across sessions
+import math
+need_ids = sorted(need_with_img)
+print()
+print(f'Final target : {len(need_ids):,} images to caption')
+est_h    = len(need_ids) * 4.0 / 3600
+sessions = math.ceil(est_h / 12)
+print(f'ETA at ~4s/img: {est_h:.0f}h total = ~{sessions} Kaggle sessions of 12h')
 """),
 
-# 4 ── resume from checkpoint if exists ───────────────────────────────────────
+# ── 4: resume from checkpoint ─────────────────────────────────────────────────
 ("code", """\
-# Load existing progress so interrupted runs can resume cleanly
-if PROG_FILE.exists():
-    with open(PROG_FILE, encoding='utf-8') as f:
+# Load checkpoint (captions saved from previous sessions)
+if CKPT_FILE.exists():
+    with open(CKPT_FILE, encoding='utf-8') as f:
         done_captions = json.load(f)
-    print(f'Resuming: {len(done_captions):,} captions already done')
+    print(f'[RESUME] Checkpoint: {len(done_captions):,} captions already saved')
 else:
     done_captions = {}
-    print('Starting fresh (no checkpoint found)')
+    print('[START] No checkpoint found — starting from scratch')
 
-# Filter out already-done IDs
-remaining_ids = [tid for tid in need_ids if tid not in done_captions]
-print(f'Remaining to caption: {len(remaining_ids):,}')
+# Load errors log (IDs that failed in previous sessions) — these are retried
+if ERR_FILE.exists():
+    with open(ERR_FILE, encoding='utf-8') as f:
+        all_errors = json.load(f)
+    print(f'[INFO] {len(all_errors):,} errors from previous sessions (will retry)')
+else:
+    all_errors = {}
 
-# Estimate runtime
-est_hours = len(remaining_ids) * 4.8 / 3600
-print(f'Estimated time at ~4.8s/image: {est_hours:.1f} hours')
-print(f'  (Kaggle session limit: 12 h — will checkpoint every {SAVE_EVERY} images)')
+# Skip IDs that are already done AND have a non-empty caption
+# (empty caption = error from previous session — will be retried this session)
+done_nonempty = {tid for tid, v in done_captions.items() if v['caption'].strip()}
+remaining_ids = [tid for tid in need_ids if tid not in done_nonempty]
+
+already_done = len(done_nonempty)
+print()
+print(f'Already captioned (non-empty) : {already_done:,} / {len(need_ids):,} '
+      f'({already_done/len(need_ids)*100:.1f}%)')
+print(f'Remaining this session        : {len(remaining_ids):,}')
+est_remaining_h = len(remaining_ids) * 4.0 / 3600
+print(f'ETA at 4s/img (12h session max): {min(est_remaining_h, 12):.1f}h')
+approx_this_run = min(len(remaining_ids), int(12 * 3600 / 4))
+print(f'Will caption approx           : {approx_this_run:,} images this run')
 """),
 
-# 5 ── load model ─────────────────────────────────────────────────────────────
+# ── 5: load model ─────────────────────────────────────────────────────────────
 ("code", """\
 import torch
 from PIL import Image
@@ -137,52 +184,71 @@ from tqdm.notebook import tqdm
 from transformers import AutoModelForImageTextToText, AutoProcessor
 from qwen_vl_utils import process_vision_info
 
-print(f'Loading {MODEL_ID} FP16 (device_map=auto) ...')
+# ── Clear any stale GPU memory before loading ─────────────────────────────────
+# Critical: re-running this cell on a dirty session causes OOM without this
+for _name in ('model', 'processor'):
+    try:
+        exec(f'del {_name}')
+    except NameError:
+        pass
+gc.collect()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
+
+print(f'Loading {MODEL_ID} FP16 (device_map=auto)...')
 model = AutoModelForImageTextToText.from_pretrained(
     MODEL_ID,
     torch_dtype=torch.float16,
     device_map='auto',
 ).eval()
 
-processor = AutoProcessor.from_pretrained(
-    MODEL_ID,
-    min_pixels=256 * 256,
-    max_pixels=448 * 448,
-)
+# Load processor WITHOUT min/max_pixels — required for the do_resize=False fast path
+# Setting min/max_pixels conflicts with process_vision_info pre-resizing
+processor = AutoProcessor.from_pretrained(MODEL_ID)
 
+print('GPU VRAM after model load:')
 for i in range(torch.cuda.device_count()):
     alloc = torch.cuda.memory_allocated(i) / 1e9
-    total_vram = torch.cuda.get_device_properties(i).total_memory / 1e9
-    print(f'  GPU{i}: {alloc:.1f} / {total_vram:.1f} GB used')
-
-DEVICE = next(model.parameters()).device
-print(f'Primary device: {DEVICE}')
+    total_v = torch.cuda.get_device_properties(i).total_memory / 1e9
+    print(f'  GPU{i}: {alloc:.1f} / {total_v:.1f} GB  ({alloc/total_v*100:.0f}% used)')
+print(f'Primary inference device: {model.device}')
 """),
 
-# 6 ── bulk inference loop ─────────────────────────────────────────────────────
+# ── 6: inference loop with atomic checkpoint ───────────────────────────────────
 ("code", """\
 def caption_image(img_path: str) -> tuple[str, float]:
-    \"\"\"Run Qwen3-VL on a single image, return (caption, elapsed_s).\"\"\"
+    \"\"\"
+    Caption one image using Qwen3-VL-8B fast inference path.
+    Returns (caption_str, elapsed_seconds).
+    Fast path: process_vision_info with image_patch_size + do_resize=False
+    Confirmed ~2-4s/img vs ~11s with naive resizing.
+    \"\"\"
     img = Image.open(img_path).convert('RGB')
     messages = [{'role': 'user', 'content': [
         {'type': 'image', 'image': img},
         {'type': 'text',  'text':  PROMPT},
     ]}]
+
     text_in = processor.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
-    # 3-value unpack — confirmed working in vram_test_corrected.ipynb
-    image_inputs, video_inputs, video_kwargs = process_vision_info(
-        messages, return_video_kwargs=True
+
+    # 2-value unpack with image_patch_size — confirmed fast path
+    # process_vision_info pre-resizes to patch grid, then do_resize=False
+    # skips the redundant processor resize that caused 11s/img slowdown
+    image_inputs, video_inputs = process_vision_info(
+        messages,
+        image_patch_size=processor.image_processor.patch_size,
     )
     inputs = processor(
         text=[text_in],
         images=image_inputs,
         videos=video_inputs,
         padding=True,
+        do_resize=False,
         return_tensors='pt',
-        **video_kwargs,
-    ).to(DEVICE)
+    ).to(model.device)
 
     t0 = time.time()
     with torch.no_grad():
@@ -193,96 +259,199 @@ def caption_image(img_path: str) -> tuple[str, float]:
     caption = processor.decode(
         out_ids[0][prompt_len:], skip_special_tokens=True
     ).strip()
+    # Immediately free GPU tensors — don't wait for Python GC
+    del inputs, out_ids
     return caption, round(elapsed, 3)
 
 
-# ── main loop ────────────────────────────────────────────────────────────────
-errors = {}
-batch_times = []
+def atomic_save(data: dict, path: Path):
+    \"\"\"
+    Write JSON atomically via temp file + rename.
+    Prevents checkpoint corruption if session is killed mid-write.
+    \"\"\"
+    tmp = path.with_suffix('.json.tmp')
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    tmp.rename(path)   # atomic on Linux (Kaggle runs Linux)
 
-print(f'Starting bulk captioning: {len(remaining_ids):,} images')
-print(f'Checkpoint every {SAVE_EVERY} images -> {PROG_FILE.name}')
-print('─' * 60)
 
-for idx, tid in enumerate(tqdm(remaining_ids, desc='VLM captioning')):
+# ── Main captioning loop ───────────────────────────────────────────────────────
+session_errors  = {}
+session_times   = []
+session_count   = 0
+
+print(f'Starting: {len(remaining_ids):,} images to caption this session')
+print(f'Checkpoint every {SAVE_EVERY} images -> {CKPT_FILE.name}  (atomic write)')
+print('-' * 65)
+
+for idx, tid in enumerate(tqdm(remaining_ids, desc='A4 VLM captioning')):
     img_path = IMG_DIR / f'{tid}.jpg'
     try:
         caption, elapsed = caption_image(str(img_path))
         done_captions[tid] = {'caption': caption, 'elapsed_s': elapsed}
-        batch_times.append(elapsed)
+        session_times.append(elapsed)
+        session_count += 1
     except Exception as e:
-        errors[tid] = str(e)
+        err_msg = str(e)
+        session_errors[tid] = err_msg
+        # Save empty placeholder so it's visible in checkpoint
+        # but ISN'T counted as done_nonempty — will be retried next session
         done_captions[tid] = {'caption': '', 'elapsed_s': 0.0}
 
-    # checkpoint save
+    # ── Atomic checkpoint every SAVE_EVERY images ─────────────────────────────
     if (idx + 1) % SAVE_EVERY == 0:
-        with open(PROG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(done_captions, f, ensure_ascii=False)
-        avg = sum(batch_times[-SAVE_EVERY:]) / len(batch_times[-SAVE_EVERY:])
-        remaining = len(remaining_ids) - (idx + 1)
-        eta_h = remaining * avg / 3600
-        print(f'  [{idx+1:>6}/{len(remaining_ids)}] checkpoint saved | '
-              f'avg={avg:.2f}s | ETA~{eta_h:.1f}h | errors={len(errors)}')
+        atomic_save(done_captions, CKPT_FILE)
 
-# final save
-with open(PROG_FILE, 'w', encoding='utf-8') as f:
-    json.dump(done_captions, f, ensure_ascii=False)
+        # Update errors log (persists across sessions)
+        all_errors.update(session_errors)
+        if all_errors:
+            atomic_save(all_errors, ERR_FILE)
 
-print(f'\\nDone. {len(done_captions):,} captions | {len(errors):,} errors')
-if batch_times:
-    print(f'Avg inference: {sum(batch_times)/len(batch_times):.2f}s/image')
-"""),
+        # ── Periodic VRAM cleanup ──────────────────────────────────────────────
+        # Prevents CUDA memory fragmentation hang that occurs after 200-400
+        # iterations. Runs every SAVE_EVERY images — no speed impact since
+        # we're already pausing for the checkpoint file write.
+        gc.collect()
+        torch.cuda.empty_cache()
 
-# 7 ── write final output ──────────────────────────────────────────────────────
-("code", """\
-# Write the final clean output file
-# Format: {tweet_id: {"caption": "...", "elapsed_s": 4.8}}
-with open(OUT_FILE, 'w', encoding='utf-8') as f:
-    json.dump(done_captions, f, indent=2, ensure_ascii=False)
+        # Progress report
+        if session_times:
+            recent_avg = sum(session_times[-SAVE_EVERY:]) / min(len(session_times), SAVE_EVERY)
+            remaining_this = len(remaining_ids) - (idx + 1)
+            eta_h = remaining_this * recent_avg / 3600
+            total_done_now = len({k for k, v in done_captions.items() if v['caption'].strip()})
+            pct = total_done_now / len(need_ids) * 100
+            alloc0 = torch.cuda.memory_allocated(0) / 1e9
+            alloc1 = torch.cuda.memory_allocated(1) / 1e9 if torch.cuda.device_count() > 1 else 0
+            print(f'  [{idx+1:>6}/{len(remaining_ids):,}] ckpt saved | '
+                  f'avg={recent_avg:.2f}s | ETA~{eta_h:.1f}h | '
+                  f'overall={total_done_now:,}/{len(need_ids):,} ({pct:.1f}%) | '
+                  f'VRAM={alloc0:.1f}+{alloc1:.1f}GB | errors={len(session_errors)}')
 
-# Stats
-have_cap  = sum(1 for v in done_captions.values() if v['caption'])
-empty_cap = sum(1 for v in done_captions.values() if not v['caption'])
-print(f'vlm_captions.json written -> {OUT_FILE}')
-print(f'  Total  : {len(done_captions):,}')
-print(f'  Filled : {have_cap:,}  ({100*have_cap/max(len(done_captions),1):.1f}%)')
-print(f'  Empty  : {empty_cap:,}  ({100*empty_cap/max(len(done_captions),1):.1f}%)')
+
+# ── Final save at end of session ──────────────────────────────────────────────
+atomic_save(done_captions, CKPT_FILE)
+all_errors.update(session_errors)
+if all_errors:
+    atomic_save(all_errors, ERR_FILE)
+
+# ── Session summary ───────────────────────────────────────────────────────────
+total_nonempty = len({k for k, v in done_captions.items() if v['caption'].strip()})
+still_left     = len(need_ids) - total_nonempty
+
 print()
-print('Files in /kaggle/working/:')
-for f in sorted(WORK_DIR.iterdir()):
-    sz_mb = f.stat().st_size / 1e6
-    print(f'  {f.name:<45s}  {sz_mb:>7.1f} MB')
-print('\\nDownload vlm_captions.json from the Kaggle output tab.')
+print('=' * 65)
+print('SESSION COMPLETE')
+print('=' * 65)
+print(f'  Captioned this session : {session_count:,}')
+print(f'  Errors this session    : {len(session_errors):,}')
+if session_times:
+    print(f'  Avg inference time     : {sum(session_times)/len(session_times):.2f}s/image')
+print()
+print(f'  Overall progress : {total_nonempty:,} / {len(need_ids):,} ({total_nonempty/len(need_ids)*100:.1f}%)')
+print(f'  Still remaining  : {still_left:,}')
+if still_left > 0:
+    print()
+    print('  -> Upload checkpoint to Kaggle input dataset and start next session')
+    print('     OR just restart this notebook — CKPT_FILE persists in /kaggle/working/')
+else:
+    print()
+    print('  -> ALL DONE! Run the finalize cell below to write vlm_captions.json')
 """),
 
-# 8 ── merge locally (info cell) ───────────────────────────────────────────────
-("markdown", """\
-## After downloading `vlm_captions.json`
+# ── 7: finalize output ────────────────────────────────────────────────────────
+("code", """\
+# ── Finalize: write vlm_captions.json when all sessions are complete ──────────
+# This cell is safe to run at any point — it reports progress if not done yet.
 
-Run the local merge script to produce the final 100%-coverage file:
+# Reload checkpoint in case this is a fresh session after the last batch
+if not CKPT_FILE.exists():
+    print('[ERROR] No checkpoint file found. Run cells 1-6 first.')
+else:
+    with open(CKPT_FILE, encoding='utf-8') as f:
+        done_captions = json.load(f)
+
+    # Recompute need_ids independently (no dependency on earlier cells)
+    print('Recomputing need_ids from OCR file...')
+    with open(OCR_FILE, encoding='utf-8') as f:
+        _ocr = json.load(f)
+    need_ids = sorted(tid for tid, txt in _ocr.items()
+                      if not str(txt).strip() and (IMG_DIR / f'{tid}.jpg').exists())
+
+    total_need    = len(need_ids)
+    done_nonempty = {tid for tid, v in done_captions.items() if v['caption'].strip()}
+    total_done    = len(done_nonempty)
+    still_left    = total_need - total_done
+    empty_cap     = sum(1 for v in done_captions.values() if not v['caption'].strip())
+
+    print(f'  Need captions : {total_need:,}')
+    print(f'  Done (filled) : {total_done:,}  ({total_done/total_need*100:.1f}%)')
+    print(f'  Empty/errors  : {empty_cap:,}')
+    print(f'  Still left    : {still_left:,}')
+    print()
+
+    if still_left > 0:
+        print(f'[NOT DONE] {still_left:,} images still need captioning.')
+        print('Start another Kaggle session — the notebook will resume from checkpoint.')
+    else:
+        # Write final output
+        atomic_save(done_captions, OUT_FILE)
+        all_t = [v['elapsed_s'] for v in done_captions.values() if v['elapsed_s'] > 0]
+
+        print(f'vlm_captions.json written -> {OUT_FILE}')
+        print(f'  Total    : {len(done_captions):,}')
+        print(f'  Filled   : {total_done:,}  ({total_done/len(done_captions)*100:.1f}%)')
+        print(f'  Empty    : {empty_cap:,}')
+        if all_t:
+            print(f'  Avg time : {sum(all_t)/len(all_t):.2f}s/image')
+        print()
+        print('Files in /kaggle/working/:')
+        for fp in sorted(WORK_DIR.iterdir()):
+            sz_mb = fp.stat().st_size / 1e6
+            print(f'  {fp.name:<50s}  {sz_mb:>7.1f} MB')
+        print()
+        print('Download vlm_captions.json from the Kaggle output tab.')
+        print('Then run: python scripts/merge_vlm_captions.py')
+"""),
+
+# ── 8: merge instructions ─────────────────────────────────────────────────────
+("markdown", """\
+## After all sessions — merge locally
 
 ```bash
 python scripts/merge_vlm_captions.py \\
-    --ocr   dataset/ocr_consolidated.json \\
+    --ocr   dataset/ocr_consolidated_filtered.json \\
     --vlm   vlm_captions.json \\
-    --out   dataset/ocr_vlm_merged.json
+    --out   dataset/unified_text.json
 ```
 
-The merged file has the same `{tweet_id: text}` format as `ocr_consolidated.json`
-so all downstream code (splits, training) works unchanged.
+### Coverage after merge (verified numbers)
 
-### Coverage after merge
 | Source | Images | % |
 |---|---|---|
-| PaddleOCR (local) | ~82,479 | 55.0% |
-| Qwen3-VL captions | ~67,521 | 45.0% |
+| OCR text (filtered, A2) | 70,744 | 47.2% |
+| VLM caption P1 (A4) | 79,256 | 52.8% |
 | **Total** | **150,000** | **100%** |
+
+### Multi-session workflow
+
+| Session | Action |
+|---|---|
+| 1 | Run all cells → runs ~10,800 images (12h @ 4s) → checkpoint saved |
+| 2–7 | Re-run notebook → cell 4 resumes from checkpoint automatically |
+| 8 | `len(done_captions) == 79,256` → run finalize cell → download |
+
+### What's next (Phase D1)
+Train RoBERTa-based multimodal classifier:
+- `tweet_text` → primary hate signal
+- `ocr_text` → text embedded in image
+- `vlm_caption` → visual context (only for the 52.8% with no OCR)
+- 6-class labels: `NotHate / Racist / Sexist / Homophobe / Religion / OtherHate`
 """),
 
 ]  # end CELLS_RAW
 
 
-# ── notebook builder ──────────────────────────────────────────────────────────
 def make_cell(cell_type, source):
     lines = [ln + "\n" for ln in source.splitlines()]
     while lines and lines[-1] == "\n":
@@ -297,13 +466,14 @@ def make_cell(cell_type, source):
 nb = {
     "cells": [make_cell(ct, src) for ct, src in CELLS_RAW],
     "metadata": {
-        "kernelspec": {
-            "display_name": "Python 3",
-            "language": "python",
-            "name": "python3",
-        },
+        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
         "language_info": {
+            "codemirror_mode": {"name": "ipython", "version": 3},
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
             "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
             "version": "3.12.12",
         },
         "kaggle": {
