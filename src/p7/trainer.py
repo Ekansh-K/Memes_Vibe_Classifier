@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from sklearn.metrics import f1_score as sklearn_f1_score
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
@@ -373,6 +374,31 @@ def train_stage(
             model, val_loader, device, variation, stage,
             criterion=criterion,
         )
+
+        # ── Stage 1 binary threshold calibration ──────────────────────────
+        # The default threshold=0.5 is suboptimal for the 78/22 imbalance.
+        # Grid-search the best macro-F1 threshold and replace the raw metric
+        # so that early stopping and best-model selection use the true peak F1.
+        if primary_key == "binary/macro_f1" and len(val_logits) > 0:
+            probs = 1.0 / (1.0 + np.exp(-val_logits.squeeze(-1)))
+            raw_f1 = val_metrics.get("binary/macro_f1", 0.0)   # F1 at threshold=0.5
+            best_t, best_f1 = 0.5, raw_f1
+            for _t in np.arange(0.10, 0.91, 0.01):
+                _preds = (probs >= _t).astype(int)
+                _f1 = float(sklearn_f1_score(
+                    val_targets.astype(int), _preds,
+                    average="macro", zero_division=0
+                ))
+                if _f1 > best_f1:
+                    best_f1, best_t = _f1, float(_t)
+            val_metrics["binary/macro_f1"]     = best_f1
+            val_metrics["binary/macro_f1_raw"] = raw_f1
+            val_metrics["binary/threshold"]    = best_t
+            logger.info(
+                f"  [Stage1 Cal] threshold={best_t:.2f}  "
+                f"calibrated_f1={best_f1:.4f}  "
+                f"raw_f1@0.5={raw_f1:.4f}"
+            )
 
         if scheduler is not None:
             if config.scheduler == "cosine":

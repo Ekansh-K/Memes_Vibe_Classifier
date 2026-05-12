@@ -129,8 +129,8 @@ MAX_VAL_SAMPLES   = None           # keep full val for reliable metrics
 S1_BATCH = 256
 S2_BATCH = 128
 
-# LR: 1e-3 base; GloVe embeddings train at 1e-4 (embed_lr_factor=0.1)
-S1_LR = 1e-3
+# LR: 5e-4 base; GloVe embeddings train at 5e-5 (embed_lr_factor=0.1)
+S1_LR = 5e-4
 S2_LR = 5e-4
 
 print(f"Variations : {RUN_VARIATIONS}")
