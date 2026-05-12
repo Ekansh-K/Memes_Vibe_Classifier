@@ -41,11 +41,13 @@ CELL_0_INSTALL = """
 import subprocess, os
 subprocess.run([
     "pip", "install", "-q",
-    "transformers==4.40.0",
+    "transformers>=4.41.0",
     "tokenizers",
     "scikit-learn",
     "pyyaml",
     "Pillow",
+    "wordsegment",
+    "emoji"
 ], check=True)
 print("Packages installed.")
 
