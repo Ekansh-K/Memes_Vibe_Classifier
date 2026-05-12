@@ -118,7 +118,7 @@ S1_EPOCHS_OVERRIDE = 20            # more data → more epochs before overfittin
 S2_EPOCHS_OVERRIDE = 25
 
 DEVICE      = 'auto'
-NUM_WORKERS = 8                    # Linux / Kaggle: 8 workers safe
+NUM_WORKERS = 4                    # Kaggle: 4 workers (8 caused OOM warnings)
 SEED        = 42
 
 MAX_TRAIN_SAMPLES = None           # None = full 150k  ← CRITICAL change from local
@@ -391,6 +391,8 @@ else:
                 use_data_parallel=True,        # uses both T4 GPUs automatically
                 use_image_store=False,          # disabled: Kaggle storage limited
                 use_compile=False,
+                num_workers=NUM_WORKERS,
+                grad_accum_steps=2,             # 2 micro-steps → effective batch=256, peak VRAM=128/GPU
 
                 # ── GloVe Twitter embeddings ───────────────────────────
                 use_glove=True,

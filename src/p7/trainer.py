@@ -94,13 +94,14 @@ def _train_epoch(
     total_loss = 0.0
     n_steps = 0
     use_amp = scaler is not None and device.type == "cuda"
+    accum_steps = max(1, getattr(config, "grad_accum_steps", 1))
+
+    optimizer.zero_grad()
 
     for step, batch in enumerate(loader):
-        images = batch["image"].to(device)
+        images    = batch["image"].to(device)
         token_ids = batch["token_ids"].to(device)
-        targets = _get_targets(batch, variation, stage).to(device)
-
-        optimizer.zero_grad()
+        targets   = _get_targets(batch, variation, stage).to(device)
 
         with torch.amp.autocast('cuda', enabled=use_amp):
             logits = model(images, token_ids)
@@ -113,19 +114,31 @@ def _train_epoch(
         else:
             loss = criterion(logits_f32, targets)
 
+        # Scale loss by accumulation steps so effective gradient == single large batch
+        loss = loss / accum_steps
+
         if use_amp:
             scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            nn.utils.clip_grad_norm_(model.parameters(), config.max_grad_norm)
-            scaler.step(optimizer)
-            scaler.update()
         else:
             loss.backward()
-            nn.utils.clip_grad_norm_(model.parameters(), config.max_grad_norm)
-            optimizer.step()
 
-        total_loss += loss.item()
+        total_loss += loss.item() * accum_steps   # log unscaled loss
         n_steps += 1
+
+        # Only step optimizer every accum_steps, or on the very last batch
+        is_last_batch = (step + 1 == len(loader))
+        should_step   = ((step + 1) % accum_steps == 0) or is_last_batch
+
+        if should_step:
+            if use_amp:
+                scaler.unscale_(optimizer)
+                nn.utils.clip_grad_norm_(model.parameters(), config.max_grad_norm)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                nn.utils.clip_grad_norm_(model.parameters(), config.max_grad_norm)
+                optimizer.step()
+            optimizer.zero_grad()
 
         if (step + 1) % config.log_every_n_steps == 0:
             logger.info(

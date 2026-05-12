@@ -79,12 +79,13 @@ class P7Config:
 
     # ── Hardware ───────────────────────────────────────────────────────────────
     device: str = "auto"             # "auto" → cuda if available, else cpu
-    num_workers: int = 4             # 4 for Windows; 8 for Kaggle/Linux
+    num_workers: int = 4             # 4 for Windows; 4 for Kaggle (safe default)
     use_amp: bool = True             # Automatic Mixed Precision (FP16)
     use_data_parallel: bool = True   # nn.DataParallel across all visible CUDA GPUs
     use_image_cache: bool = False    # Legacy RAM dict cache (incompatible w/ workers)
     use_image_store: bool = True     # Memmap image store: eliminates JPEG decode
     use_compile: bool = False        # torch.compile — Linux/Triton only
+    grad_accum_steps: int = 1        # gradient accumulation (>1 reduces peak VRAM)
 
     # ── Augmentation ───────────────────────────────────────────────────────────
     use_random_erasing: bool = True  # occlude random image patches (anti-overfit)
