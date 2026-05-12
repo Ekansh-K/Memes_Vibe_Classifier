@@ -114,10 +114,11 @@ class FocalLoss(nn.Module):
         pos_weight: Optional scalar pos_weight for positive class.
     """
 
-    def __init__(self, gamma: float = 2.0, pos_weight: float = 1.0):
+    def __init__(self, gamma: float = 2.0, pos_weight: float = 1.0, smoothing: float = 0.0):
         super().__init__()
         self.gamma = gamma
         self.pos_weight = pos_weight
+        self.smoothing = smoothing
 
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
@@ -127,7 +128,9 @@ class FocalLoss(nn.Module):
         """
         logits = logits.view(-1)
         targets = targets.float().view(-1)
-
+        # Apply label smoothing to focal loss targets too
+        if hasattr(self, 'smoothing') and self.smoothing > 0:
+            targets = targets * (1.0 - self.smoothing) + 0.5 * self.smoothing
         bce = F.binary_cross_entropy_with_logits(
             logits, targets, reduction="none",
             pos_weight=torch.tensor(self.pos_weight, device=logits.device),
@@ -205,8 +208,8 @@ def get_p7_loss(
         if s1_loss_type == "focal":
             counts = Counter(labels_binary)
             pw = counts.get(0, 1) / max(counts.get(1, 1), 1)
-            logger.info(f"[P7 Loss] Using FocalLoss (gamma={focal_gamma}, pos_weight={pw:.3f})")
-            return FocalLoss(gamma=focal_gamma, pos_weight=pw)
+            logger.info(f"[P7 Loss] Using FocalLoss (gamma={focal_gamma}, pos_weight={pw:.3f}, smoothing={label_smoothing})")
+            return FocalLoss(gamma=focal_gamma, pos_weight=pw, smoothing=label_smoothing)
         else:
             pw = compute_binary_pos_weight(labels_binary, device)
             if label_smoothing > 0:
@@ -243,6 +246,17 @@ def get_p7_loss(
             vec = [1.0 if soft[c] >= threshold else 0.0 for c in range(1, 6)]
             ml_vecs.append(vec)
         pw = compute_multilabel_pos_weights(ml_vecs, num_categories=5, device=device)
+        if label_smoothing > 0:
+            # Wrap with a custom module that applies smoothing before BCE
+            class _SmoothedMultilabelBCE(nn.Module):
+                def __init__(self, pos_weight, smoothing):
+                    super().__init__()
+                    self.bce = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+                    self.smoothing = smoothing
+                def forward(self, logits, targets):
+                    targets = targets.float() * (1.0 - self.smoothing) + 0.5 * self.smoothing
+                    return self.bce(logits, targets)
+            return _SmoothedMultilabelBCE(pw, label_smoothing)
         return nn.BCEWithLogitsLoss(pos_weight=pw)
 
     raise ValueError(f"Unknown combination: variation={variation!r}, stage={stage}")

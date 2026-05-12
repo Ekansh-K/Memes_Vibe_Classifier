@@ -141,6 +141,7 @@ class MHSDF(nn.Module):
         head_hidden: int = 256,
         head_dropout: float = 0.3,
         pad_idx: int = 0,
+        pretrained_embeddings: Optional[torch.Tensor] = None,
     ):
         super().__init__()
         self.visual = CNNVisualEncoder(out_dim=cnn_out_dim, dropout=head_dropout)

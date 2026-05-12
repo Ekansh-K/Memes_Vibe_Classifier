@@ -73,6 +73,7 @@ class P7Tokenizer:
         self.max_seq_len = max_seq_len
         self.model_name = model_name
         self._tok = get_tokenizer(model_name)
+        self.tokenizer = self._tok          # public alias used by glove_init.py
         self.vocab_size: int = self._tok.vocab_size
         self.pad_id: int = self._tok.pad_token_id or 0
 

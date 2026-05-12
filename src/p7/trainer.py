@@ -88,7 +88,7 @@ def _train_epoch(
     variation: str,
     stage: int,
     epoch: int,
-    scaler: Optional[torch.cuda.amp.GradScaler] = None,
+    scaler: Optional[torch.amp.GradScaler] = None,
 ) -> dict:
     model.train()
     total_loss = 0.0
@@ -262,7 +262,7 @@ def train_stage(
 
     # AMP scaler — enabled only when use_amp=True and device is CUDA
     scaler = (
-        torch.cuda.amp.GradScaler()
+        torch.amp.GradScaler("cuda")
         if getattr(config, "use_amp", False) and device.type == "cuda"
         else None
     )
@@ -286,8 +286,8 @@ def train_stage(
             logger.warning(f"[P7 Trainer] torch.compile failed ({type(e).__name__}). Using eager mode.")
 
     if config.scheduler == "cosine":
-        warmup_steps = int(epochs * len(train_loader) * config.warmup_ratio)
-        scheduler = CosineAnnealingLR(optimizer, T_max=epochs * len(train_loader))
+        # T_max=epochs: scheduler.step() is called once per epoch
+        scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=lr * 0.01)
     elif config.scheduler == "step":
         scheduler = StepLR(optimizer, step_size=max(1, epochs // 3), gamma=0.5)
     else:
