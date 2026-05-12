@@ -258,7 +258,27 @@ def train_stage(
         label_smoothing=getattr(config, "label_smoothing", 0.0),
     )
 
-    optimizer = AdamW(model.parameters(), lr=lr, weight_decay=config.weight_decay)
+    # ── Differential LR: GloVe embeddings at lower LR ─────────────────────
+    embed_lr_factor = getattr(config, "embed_lr_factor", 0.1)
+    _module = model.module if isinstance(model, nn.DataParallel) else model
+
+    # Separate embedding params from the rest (CNN + LSTM + head)
+    embed_params = list(_module.textual.embed.parameters())
+    embed_ids = {id(p) for p in embed_params}
+    other_params = [p for p in _module.parameters() if id(p) not in embed_ids]
+
+    has_pretrained = any(p.requires_grad for p in embed_params)
+    if has_pretrained and embed_lr_factor < 1.0:
+        optimizer = AdamW([
+            {"params": embed_params, "lr": lr * embed_lr_factor},  # GloVe: 10× lower
+            {"params": other_params, "lr": lr},                     # CNN + LSTM + head
+        ], weight_decay=config.weight_decay)
+        logger.info(
+            f"[P7 Trainer] Differential LR: embed={lr * embed_lr_factor:.1e}, "
+            f"other={lr:.1e} (factor={embed_lr_factor})"
+        )
+    else:
+        optimizer = AdamW(model.parameters(), lr=lr, weight_decay=config.weight_decay)
 
     # AMP scaler — enabled only when use_amp=True and device is CUDA
     scaler = (
@@ -285,9 +305,17 @@ def train_stage(
         except Exception as e:
             logger.warning(f"[P7 Trainer] torch.compile failed ({type(e).__name__}). Using eager mode.")
 
+    # ── LR Scheduler: optional warmup → cosine decay ──────────────────────
+    warmup_epochs = getattr(config, "warmup_epochs", 0)
     if config.scheduler == "cosine":
-        # T_max=epochs: scheduler.step() is called once per epoch
-        scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=lr * 0.01)
+        cosine = CosineAnnealingLR(optimizer, T_max=max(1, epochs - warmup_epochs), eta_min=lr * 0.01)
+        if warmup_epochs > 0:
+            from torch.optim.lr_scheduler import LinearLR, SequentialLR
+            warmup = LinearLR(optimizer, start_factor=0.1, end_factor=1.0, total_iters=warmup_epochs)
+            scheduler = SequentialLR(optimizer, schedulers=[warmup, cosine], milestones=[warmup_epochs])
+            logger.info(f"[P7 Trainer] Scheduler: {warmup_epochs}-epoch warmup → cosine decay (T_max={epochs - warmup_epochs})")
+        else:
+            scheduler = cosine
     elif config.scheduler == "step":
         scheduler = StepLR(optimizer, step_size=max(1, epochs // 3), gamma=0.5)
     else:

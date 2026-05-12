@@ -129,10 +129,9 @@ MAX_VAL_SAMPLES   = None           # keep full val for reliable metrics
 S1_BATCH = 256
 S2_BATCH = 128
 
-# LR scaled linearly with batch size (vs local batch=64 lr=1e-3)
-#   256/64 = 4x  → lr = 1e-3 × 4 = 4e-3  (use sqrt rule for safety: ×2)
-S1_LR = 2e-3
-S2_LR = 1e-3
+# LR: 1e-3 base; GloVe embeddings train at 1e-4 (embed_lr_factor=0.1)
+S1_LR = 1e-3
+S2_LR = 5e-4
 
 print(f"Variations : {RUN_VARIATIONS}")
 print(f"Text modes : {TEXT_MODES}")
@@ -382,6 +381,10 @@ else:
                 s1_loss='focal',
                 use_random_erasing=True,
                 token_drop_rate=0.10,
+
+                # ── LR scheduling ─────────────────────────────────────
+                embed_lr_factor=0.1,           # GloVe embeds at 10× lower LR
+                warmup_epochs=1,               # 1-epoch linear warmup
 
                 # ── Hardware ───────────────────────────────────────────
                 use_amp=True,
