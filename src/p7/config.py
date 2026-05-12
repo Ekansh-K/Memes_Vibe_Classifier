@@ -75,7 +75,7 @@ class P7Config:
     embed_lr_factor: float = 0.1        # GloVe embedding LR = base_lr × this factor
     max_grad_norm: float = 1.0
     label_smoothing: float = 0.1         # 0 = off; 0.1 prevents overconfidence
-    early_stop_patience: int = 3         # 0 = disabled; epochs without val improvement
+    early_stop_patience: int = 5         # 0 = disabled; epochs without val improvement
 
     # ── Hardware ───────────────────────────────────────────────────────────────
     device: str = "auto"             # "auto" → cuda if available, else cpu

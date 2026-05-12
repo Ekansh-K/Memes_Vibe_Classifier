@@ -375,7 +375,7 @@ else:
                 s2_lr=S2_LR,
 
                 # ── Anti-overfitting ───────────────────────────────────
-                early_stop_patience=4,
+                early_stop_patience=5,
                 label_smoothing=0.1,
                 weight_decay=5e-4,
                 s1_loss='focal',
@@ -391,7 +391,6 @@ else:
                 use_data_parallel=True,        # uses both T4 GPUs automatically
                 use_image_store=False,          # disabled: Kaggle storage limited
                 use_compile=False,
-                num_workers=NUM_WORKERS,
                 grad_accum_steps=2,             # 2 micro-steps → effective batch=256, peak VRAM=128/GPU
 
                 # ── GloVe Twitter embeddings ───────────────────────────

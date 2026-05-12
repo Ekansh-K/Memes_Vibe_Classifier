@@ -386,15 +386,23 @@ def train_stage(
         primary_val = val_metrics.get(primary_key, 0.0)
         # ── State dict save: unwrap DataParallel if present ──────────────────
         _module = model.module if isinstance(model, nn.DataParallel) else model
+
+        # Don't count warmup epochs toward early stopping — the warmup epoch
+        # produces a trivial all-NotHate baseline (macro_f1≈0.50) that would
+        # poison the patience counter before real learning begins.
+        in_warmup = (epoch < warmup_epochs)
+
         if primary_val > best_metric:
             best_metric = primary_val
             best_state  = {k: v.clone() for k, v in _module.state_dict().items()}
             save_dir.mkdir(parents=True, exist_ok=True)
             torch.save(best_state, save_dir / f"stage{stage}_best.pt")
             logger.info(f"  ↑ New best {primary_key}={best_metric:.4f}  (saved)")
-            no_improve = 0
+            if not in_warmup:
+                no_improve = 0
         else:
-            no_improve += 1
+            if not in_warmup:
+                no_improve += 1
             if patience > 0 and no_improve >= patience:
                 logger.info(
                     f"[P7 Trainer] Early stopping: no improvement for "
