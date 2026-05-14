@@ -279,14 +279,25 @@ def main():
 
         def check_proj_t_identity():
             import torch.nn.functional as F
-            eye = torch.eye(768)
-            mse = F.mse_loss(model.proj_t.weight.data.cpu(), eye).item()
+            w = model.proj_t.weight.data.cpu()   # (d_v=1024, d_t=768)
+            d_t = w.shape[1]                      # 768
+            # Top-left d_t×d_t block should be identity
+            top_block = w[:d_t, :d_t]
+            eye = torch.eye(d_t)
+            mse_top = F.mse_loss(top_block, eye).item()
+            # Bottom (d_v-d_t)×d_t block should be zeros
+            bottom_block = w[d_t:, :]
+            mse_bot = bottom_block.abs().max().item()
             bias_norm = model.proj_t.bias.data.norm().item()
-            print(f"         proj_t weight MSE from identity: {mse:.2e}  bias norm: {bias_norm:.2e}")
-            assert mse < 1e-6, f"proj_t not identity-init: MSE={mse}"
+            print(f"         proj_t shape: {list(w.shape)}  (expect [1024, 768])")
+            print(f"         top-left {d_t}×{d_t} block MSE from identity: {mse_top:.2e}")
+            print(f"         bottom block max abs (expect ~0): {mse_bot:.2e}")
+            print(f"         bias norm (expect ~0): {bias_norm:.2e}")
+            assert mse_top < 1e-6, f"proj_t top block not identity-init: MSE={mse_top}"
+            assert mse_bot < 1e-6, f"proj_t bottom block not zeros: max={mse_bot}"
             assert bias_norm < 1e-6, f"proj_t bias not zero: norm={bias_norm}"
 
-        check("proj_t is identity-initialised", check_proj_t_identity)
+        check("proj_t is partial-identity-initialised (top block=I, bottom=0)", check_proj_t_identity)
 
         def check_patch_tokens_shape():
             from PIL import Image as PILImage
@@ -294,9 +305,9 @@ def main():
             imgs_t = model._preprocess_images(imgs, device)
             V = model._extract_patch_tokens(imgs_t)
             print(f"         Patch tokens shape: {V.shape}")
-            assert V.shape == (2, 257, 768), f"Expected (2,257,768), got {V.shape}"
+            assert V.shape == (2, 257, 1024), f"Expected (2,257,1024) for ViT-L/14, got {V.shape}"
 
-        check("CLIP patch tokens shape (B, 257, 768)", check_patch_tokens_shape)
+        check("CLIP patch tokens shape (B, 257, 1024)", check_patch_tokens_shape)
 
         def check_forward_shape_binary():
             from PIL import Image as PILImage

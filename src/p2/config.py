@@ -34,8 +34,9 @@ class P2Config:
     tweet_model: str = "cardiffnlp/twitter-roberta-base"
 
     # ── Architecture ────────────────────────────────────────────────────────
-    d_model: int = 768            # CLIP ViT-L/14 output dim = TweetEval dim
-    n_heads: int = 8              # cross-attention heads
+    d_v: int = 1024           # CLIP ViT-L/14 visual patch embedding dim
+    d_t: int = 768            # TweetEval RoBERTa hidden dim
+    n_heads: int = 8              # cross-attention heads (must divide d_v)
     head_hidden: int = 512        # classification head hidden dim
     head_dropout: float = 0.3     # dropout in classification head
     max_text_len: int = 128       # TweetEval tokenizer max length

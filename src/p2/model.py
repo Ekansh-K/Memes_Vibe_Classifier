@@ -1,18 +1,23 @@
 """TCAM — Text-guided Cross-Attention Multimodal model (P2).
 
 Architecture:
-    image → CLIP ViT-L/14 (frozen, patch tokens via hook) → V ∈ R^(B, 257, 768)
+    image → CLIP ViT-L/14 (frozen, patch tokens via hook) → V ∈ R^(B, 257, 1024)
     text  → TweetEval RoBERTa (frozen)                    → T ∈ R^(B, seq, 768)
                                     ↓
-          proj_t: Linear(768→768, identity-init) → T_proj
-          CrossAttention(Q=V, K=T_proj, V=T_proj, 8 heads) → V' (residual + LayerNorm)
+          proj_t: Linear(768→1024)  → T_proj  [projects text dim to visual dim]
+          CrossAttention(Q=V[1024], K=T_proj[1024], V=T_proj[1024], 8 heads) → V'
                                     ↓
-          mean_pool(V') || mean_pool(T_proj) → concat ∈ R^(B, 1536)
+          mean_pool(V') || mean_pool(T_proj) → concat ∈ R^(B, 2048)
                                     ↓
-          Head: Linear(1536→512) → GELU → Dropout(0.3) → Linear(512→num_classes)
+          Head: Linear(2048→512) → GELU → Dropout(0.3) → Linear(512→num_classes)
+
+Dimensions:
+    d_v = 1024  ← CLIP ViT-L/14 visual embedding dim
+    d_t = 768   ← TweetEval RoBERTa hidden dim
+    d_fused = d_v * 2 = 2048  ← after mean-pooling + concat
 
 Frozen: clip_visual, tweet_encoder (all requires_grad=False)
-Trainable: proj_t, cross_attn, head (~3-5M params)
+Trainable: proj_t, cross_attn, head (~5-7M params)
 """
 
 import logging
@@ -78,7 +83,8 @@ class TCAM(nn.Module):
         num_classes: int,
         clip_model: str = "ViT-L/14",
         tweet_model: str = "cardiffnlp/twitter-roberta-base",
-        d_model: int = 768,
+        d_v: int = 1024,          # CLIP ViT-L/14 visual patch embedding dim
+        d_t: int = 768,           # TweetEval RoBERTa hidden dim
         n_heads: int = 8,
         head_hidden: int = 512,
         dropout: float = 0.3,
@@ -86,7 +92,8 @@ class TCAM(nn.Module):
     ):
         super().__init__()
         self.num_classes = num_classes
-        self.d_model = d_model
+        self.d_v = d_v
+        self.d_t = d_t
         self.max_text_len = max_text_len
 
         # ── Frozen CLIP visual encoder ──────────────────────────────────────
@@ -108,17 +115,23 @@ class TCAM(nn.Module):
         self.tweet_encoder.eval()
         logger.info(f"[TCAM] TweetEval {tweet_model} loaded and frozen.")
 
-        # ── Learnable projection (identity-init) ───────────────────────────
-        self.proj_t = nn.Linear(d_model, d_model)
-        nn.init.eye_(self.proj_t.weight)
+        # ── Learnable projection: text dim (d_t=768) → visual dim (d_v=1024) ─
+        # Partial-identity init: top-left d_t×d_t block = Identity, rest = 0.
+        # At t=0, text tokens pass through unchanged in first d_t dims, giving
+        # a stable starting point equivalent to identity for square proj_t.
+        self.proj_t = nn.Linear(d_t, d_v, bias=True)
+        nn.init.zeros_(self.proj_t.weight)
         nn.init.zeros_(self.proj_t.bias)
+        with torch.no_grad():
+            self.proj_t.weight[:d_t, :d_t].copy_(torch.eye(d_t))
 
-        # ── Learnable cross-attention ───────────────────────────────────────
-        self.cross_attn = CrossAttention(d_model=d_model, n_heads=n_heads)
+        # ── Learnable cross-attention (operates in d_v=1024 space) ──────────
+        self.cross_attn = CrossAttention(d_model=d_v, n_heads=n_heads)
 
-        # ── Learnable classification head ───────────────────────────────────
+        # ── Learnable classification head ────────────────────────────────────
+        # Input: concat(v_pool[d_v], t_pool[d_v]) = d_v * 2 = 2048
         self.head = nn.Sequential(
-            nn.Linear(d_model * 2, head_hidden),
+            nn.Linear(d_v * 2, head_hidden),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(head_hidden, num_classes),
@@ -151,9 +164,9 @@ class TCAM(nn.Module):
         finally:
             handle.remove()
 
-        # CLIP internal: (seq=257, B, 768) → batch-first: (B, 257, 768)
+        # CLIP ViT-L/14 internal: (seq=257, B, d_v=1024) → batch-first: (B, 257, 1024)
         V = patch_tokens["v"].permute(1, 0, 2).float()
-        return V
+        return V  # (B, 257, 1024)
 
     def _encode_text(
         self, texts: list[str], device: torch.device
@@ -183,7 +196,7 @@ class TCAM(nn.Module):
 
         T = out.last_hidden_state.float()       # (B, seq_len, 768)
         pad_mask = (enc["attention_mask"] == 0)  # (B, seq_len) True = pad
-        return T, pad_mask
+        return T, pad_mask  # T: (B, seq, d_t=768)
 
     def _preprocess_images(
         self, pil_images: list, device: torch.device
@@ -221,24 +234,22 @@ class TCAM(nn.Module):
 
         # ── Visual branch: CLIP patch tokens ──────────────────────────────
         if isinstance(images, torch.Tensor):
-            # Already preprocessed tensor from trainer (DataParallel path)
             images_tensor = images.to(device)
         else:
-            # List of PIL images — preprocess on the fly (single-GPU path)
             images_tensor = self._preprocess_images(images, device)
-        V = self._extract_patch_tokens(images_tensor)  # (B, 257, 768)
+        V = self._extract_patch_tokens(images_tensor)  # (B, 257, d_v=1024)
 
-        # ── Text branch: TweetEval encoding ───────────────────────────────
-        T, pad_mask = self._encode_text(texts, device)  # (B, seq, 768)
+        # ── Text branch: TweetEval encoding ──────────────────────────────
+        T, pad_mask = self._encode_text(texts, device)  # (B, seq, d_t=768)
 
         # ── Learnable fusion ──────────────────────────────────────────────
-        T_proj = self.proj_t(T)                          # (B, seq, 768)
+        T_proj = self.proj_t(T)                    # (B, seq, d_v=1024)
         V_prime = self.cross_attn(V, T_proj, key_padding_mask=pad_mask)
 
         # Mean-pool both branches, concatenate
-        v_pool = V_prime.mean(dim=1)   # (B, 768)
-        t_pool = T_proj.mean(dim=1)    # (B, 768)
-        fused = torch.cat([v_pool, t_pool], dim=-1)  # (B, 1536)
+        v_pool = V_prime.mean(dim=1)   # (B, d_v=1024)
+        t_pool = T_proj.mean(dim=1)    # (B, d_v=1024)
+        fused = torch.cat([v_pool, t_pool], dim=-1)  # (B, d_v*2=2048)
 
         return self.head(fused)  # (B, num_classes)
 
@@ -286,7 +297,8 @@ class TCAM(nn.Module):
             num_classes=num_classes,
             clip_model=config.clip_model,
             tweet_model=config.tweet_model,
-            d_model=config.d_model,
+            d_v=config.d_v,
+            d_t=config.d_t,
             n_heads=config.n_heads,
             head_hidden=config.head_hidden,
             dropout=config.head_dropout,

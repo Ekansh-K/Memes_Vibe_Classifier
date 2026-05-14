@@ -128,23 +128,16 @@ IS_KAGGLE = Path("/kaggle/input").exists()
 print(f"Environment: {'Kaggle' if IS_KAGGLE else 'Local'}")
 
 if IS_KAGGLE:
-    # ── Kaggle paths (adjust dataset name to match your upload) ──────────────
-    DATASET_NAME = "mmhs150k-processed"   # <-- change to your Kaggle dataset name
-    INPUT_DIR    = Path(f"/kaggle/input/{DATASET_NAME}")
-    OUTPUT_DIR   = Path("/kaggle/working")
+    # ── Kaggle paths ─────────────────────────────────────────────────────────
+    INPUT_DIR  = Path('/kaggle/input/datasets/ekanshkhullar/updated-hate-speech-dataset/dataset')
+    WORK_DIR   = Path('/kaggle/working')
+    CODE_DIR   = WORK_DIR / 'Memes_Vibe_Classifier'
     
-    os.environ["MMHS_PROJECT_ROOT"] = str(OUTPUT_DIR)
+    os.environ["MMHS_PROJECT_ROOT"] = str(CODE_DIR)
     os.environ["MMHS_DATA_DIR"]     = str(INPUT_DIR)
     
     # Add src to path
-    SRC_DIR = INPUT_DIR / "src"  # adjust if repo uploaded differently
-    if SRC_DIR.exists():
-        sys.path.insert(0, str(INPUT_DIR))
-    else:
-        # Repo uploaded as separate dataset
-        REPO_DIR = Path("/kaggle/input/mmhs150k-repo")
-        if REPO_DIR.exists():
-            sys.path.insert(0, str(REPO_DIR))
+    sys.path.insert(0, str(CODE_DIR))
 else:
     # ── Local paths ───────────────────────────────────────────────────────────
     PROJECT_ROOT = Path.cwd()
