@@ -101,6 +101,44 @@ print(f"\\nCODE_DIR  : {CODE_DIR}")
 print(f"INPUT_DIR : {INPUT_DIR}")
 """
 
+CELL_1B_VERIFY_SRC = """
+# Cell 1b: Preflight — verify src/p7/trainer.py has all critical fixes
+# This cell will RAISE if the deployed trainer is missing key features,
+# so you never accidentally run a stale codebase that silently underperforms.
+
+import inspect
+from pathlib import Path
+
+trainer_path = CODE_DIR / 'src' / 'p7' / 'trainer.py'
+assert trainer_path.exists(), f"trainer.py not found at {trainer_path}"
+
+trainer_src = trainer_path.read_text(encoding='utf-8')
+
+checks = [
+    ('Stage 1 threshold calibration', 'Stage1 Cal'),
+    ('Warmup early-stop skip',        'in_warmup'),
+    ('Differential LR (GloVe)',       'embed_lr_factor'),
+    ('Gradient accumulation',         'accum_steps'),
+    ('sklearn f1 import',             'sklearn_f1_score'),
+]
+
+all_ok = True
+for name, marker in checks:
+    present = marker in trainer_src
+    status = '✅' if present else '❌ MISSING'
+    print(f'  {status}  {name}')
+    if not present:
+        all_ok = False
+
+if not all_ok:
+    raise RuntimeError(
+        '\\n\\nYour trainer.py is MISSING critical fixes!\\n'
+        'Re-upload the updated src/p7/ folder from your local machine before running.\\n'
+        'See the README for git sync instructions.'
+    )
+print('\\n✓ All preflight checks passed — trainer.py is up to date.')
+"""
+
 CELL_2_CONFIG = """
 # Cell 2: Run configuration — EDIT THIS to control what runs
 
@@ -553,6 +591,7 @@ cells = [
 """),
     code(CELL_0_INSTALL),
     code(CELL_1_ENV),
+    code(CELL_1B_VERIFY_SRC),
     code(CELL_2_CONFIG),
     code(CELL_3_PATHS),
     code(CELL_4_TOKENIZER),
