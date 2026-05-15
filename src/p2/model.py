@@ -143,14 +143,15 @@ class TCAM(nn.Module):
         Registers a forward hook on the last transformer resblock to capture
         the sequence output BEFORE ln_post and projection pooling.
 
-        CLIP ViT stores sequences as (seq_len, batch, d_model) internally,
-        so we permute to (batch, seq_len, d_model) for batch-first ops.
+        CLIP ViT-L/14 stores sequences as (seq_len, batch, d_v) internally,
+        so we permute to (batch, seq_len, d_v) for batch-first ops.
 
         Args:
             images: (B, 3, 224, 224) preprocessed images (on device).
 
         Returns:
-            (B, 257, 768) where 257 = 1 CLS + 256 patches (14×14 grid).
+            (B, 257, 1024) where 257 = 1 CLS + 256 patches (14×14 grid),
+            and 1024 = d_v (CLIP ViT-L/14 internal embedding dim).
         """
         patch_tokens = {}
 
@@ -271,7 +272,7 @@ class TCAM(nn.Module):
         # Rebuild head with new output size
         head_hidden = self.head[0].out_features  # preserve hidden dim
         dropout = self.head[2].p  # preserve dropout rate
-        d_input = self.head[0].in_features  # 1536
+        d_input = self.head[0].in_features  # d_v * 2 = 2048
 
         self.head = nn.Sequential(
             nn.Linear(d_input, head_hidden),

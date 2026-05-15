@@ -212,11 +212,14 @@ print(f"\\nFrozen check:")
 print(f"  CLIP has_grad   : {clip_grad_any}  (expect False)")
 print(f"  TweetEval grad  : {tweet_grad_any}  (expect False)")
 
-# Verify proj_t identity init
+# Verify proj_t partial-identity init
+# proj_t is Linear(768 → 1024): weight shape = [1024, 768]
+# Expect: top-left [768, 768] block ≈ eye(768), rest ≈ 0
 import torch.nn.functional as F
-eye = torch.eye(768)
-is_identity = F.mse_loss(model.proj_t.weight.data.cpu(), eye).item()
-print(f"  proj_t identity : MSE={is_identity:.2e}  (expect ~0.0)")
+partial_eye = torch.zeros(1024, 768)          # [out=1024, in=768]
+partial_eye[:768, :768] = torch.eye(768)      # top-left block = identity
+is_identity = F.mse_loss(model.proj_t.weight.data.cpu(), partial_eye).item()
+print(f"  proj_t partial-identity MSE: {is_identity:.2e}  (expect ~0.0)")
 
 # Forward pass shape check
 dummy_imgs = [Image.new("RGB", (224, 224), (128, 128, 128)) for _ in range(2)]
@@ -231,7 +234,7 @@ print(f"  Output : {logits.shape}  (expect [2, 1])")
 V = model._extract_patch_tokens(
     model._preprocess_images(dummy_imgs, device)
 )
-print(f"  Patch tokens : {V.shape}  (expect [2, 257, 768])")
+print(f"  Patch tokens : {V.shape}  (expect [2, 257, 1024])")
 
 del model
 torch.cuda.empty_cache() if torch.cuda.is_available() else None
