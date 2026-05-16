@@ -192,11 +192,15 @@ class TCAM(nn.Module):
         # Move tokenizer outputs to the correct device
         enc = {k: v.to(device) for k, v in enc.items()}
 
+        # Ensure tweet_encoder parameters are on the same device.
+        # Under DataParallel each replica has its own copy, but calling .to()
+        # here is a no-op when it's already there, so it's safe and cheap.
+        self.tweet_encoder.to(device)
         with torch.no_grad():
             out = self.tweet_encoder(**enc)
 
-        T = out.last_hidden_state.float()       # (B, seq_len, 768)
-        pad_mask = (enc["attention_mask"] == 0)  # (B, seq_len) True = pad
+        T = out.last_hidden_state.float().to(device)  # explicit guard
+        pad_mask = (enc["attention_mask"] == 0)        # (B, seq_len) True = pad
         return T, pad_mask  # T: (B, seq, d_t=768)
 
     def _preprocess_images(
@@ -230,27 +234,43 @@ class TCAM(nn.Module):
         Returns:
             logits: (B, num_classes) — raw logits (no sigmoid/softmax).
         """
-        # Determine device from trainable parameters
-        device = self.proj_t.weight.device
+        # ── Determine device from the input images tensor ──────────────────
+        # IMPORTANT: use images.device, NOT self.proj_t.weight.device.
+        # Under nn.DataParallel each replica receives a slice of the image
+        # tensor already placed on its GPU (cuda:0 or cuda:1). Using the
+        # tensor's device guarantees all operations stay on the correct GPU.
+        if isinstance(images, torch.Tensor):
+            device = images.device
+            images_tensor = images
+        else:
+            # PIL list path (single-GPU or local dev use)
+            device = self.proj_t.weight.device
+            images_tensor = self._preprocess_images(images, device)
 
         # ── Visual branch: CLIP patch tokens ──────────────────────────────
-        if isinstance(images, torch.Tensor):
-            images_tensor = images.to(device)
-        else:
-            images_tensor = self._preprocess_images(images, device)
+        # Move CLIP to the same device as the images so the hook captures
+        # activations on the right GPU under DataParallel.
+        self._clip_model.to(device)
+        images_tensor = images_tensor.to(device)
         V = self._extract_patch_tokens(images_tensor)  # (B, 257, d_v=1024)
 
         # ── Text branch: TweetEval encoding ──────────────────────────────
-        T, pad_mask = self._encode_text(texts, device)  # (B, seq, d_t=768)
+        # DataParallel cannot scatter a list[str], so each replica receives
+        # ALL texts.  Slice to match the image sub-batch size so shapes align.
+        texts_slice = texts[: images_tensor.shape[0]]
+        T, pad_mask = self._encode_text(texts_slice, device)  # (B, seq, d_t=768)
 
         # ── Learnable fusion ──────────────────────────────────────────────
-        T_proj = self.proj_t(T)                    # (B, seq, d_v=1024)
-        V_prime = self.cross_attn(V, T_proj, key_padding_mask=pad_mask)
+        T_proj   = self.proj_t(T)                     # (B, seq, d_v=1024)
+        V_prime  = self.cross_attn(
+            V, T_proj,
+            key_padding_mask=pad_mask.to(device),     # explicit device guard
+        )
 
         # Mean-pool both branches, concatenate
         v_pool = V_prime.mean(dim=1)   # (B, d_v=1024)
         t_pool = T_proj.mean(dim=1)    # (B, d_v=1024)
-        fused = torch.cat([v_pool, t_pool], dim=-1)  # (B, d_v*2=2048)
+        fused  = torch.cat([v_pool, t_pool], dim=-1)  # (B, d_v*2=2048)
 
         return self.head(fused)  # (B, num_classes)
 
