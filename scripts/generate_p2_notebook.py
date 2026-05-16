@@ -63,20 +63,20 @@ MAX_VAL_SAMPLES   = None
 # ── STAGE 1 HYPERPARAMETERS ──────────────────────────────────────────────────
 S1_EPOCHS     = 5
 S1_LR         = 2e-4
-S1_BATCH_SIZE = 16         # T4-safe; effective batch = 16 × 8 = 128
+S1_BATCH_SIZE = 32         # single T4; effective batch = 32 × 4 = 128
 S1_WARMUP     = 0.05       # 5% of total steps
 
 # ── STAGE 2 HYPERPARAMETERS (C/D only) ──────────────────────────────────────
 S2_EPOCHS     = 7
 S2_LR         = 1e-4
-S2_BATCH_SIZE = 16
+S2_BATCH_SIZE = 32
 S2_WARMUP     = 0.10       # 10% of total steps
 
 # ── SHARED ───────────────────────────────────────────────────────────────────
-GRAD_ACCUM    = 8          # effective batch = batch_size × grad_accum
+GRAD_ACCUM    = 4          # effective batch = batch_size × grad_accum = 128
 SEED          = 42
 USE_AMP       = True       # fp16 mixed precision
-USE_DATA_PARALLEL = True   # use both T4 GPUs
+USE_DATA_PARALLEL = False   # CLIP ViT-L/14 is too large for clean DataParallel replication
 
 # ── STORAGE ─────────────────────────────────────────────────────────────────
 # IMPORTANT: Keep USE_IMAGE_STORE = False on Kaggle.
@@ -158,7 +158,7 @@ if IS_KAGGLE:
     required = {
         "GT labels"       : INPUT_DIR / "MMHS150K_GT.json",
         "Processed labels": INPUT_DIR / "processed_labels.json",
-        "OCR filtered"    : INPUT_DIR / "ocr_filtered.json",
+        "OCR filtered"    : INPUT_DIR / "ocr_consolidated_filtered.json",
         "Train split"     : INPUT_DIR / "splits" / "train_ids.txt",
         "Val split"       : INPUT_DIR / "splits" / "val_ids.txt",
         "Test split"      : INPUT_DIR / "splits" / "test_ids.txt",
