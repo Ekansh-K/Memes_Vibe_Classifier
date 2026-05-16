@@ -189,7 +189,7 @@ CODE_DIR  = Path(os.environ['MMHS_PROJECT_ROOT'])
 REQUIRED_FILES = {
     "GT labels"          : INPUT_DIR / "MMHS150K_GT.json",
     "Processed labels"   : INPUT_DIR / "processed_labels.json",
-    "OCR consolidated"   : INPUT_DIR / "ocr_consolidated.json",
+    "OCR filtered"       : INPUT_DIR / "ocr_filtered.json",
     "Train split"        : INPUT_DIR / "splits" / "train_ids.txt",
     "Val split"          : INPUT_DIR / "splits" / "val_ids.txt",
     "Test split"         : INPUT_DIR / "splits" / "test_ids.txt",
@@ -242,13 +242,84 @@ tokenizer = P7Tokenizer(
 )
 print(f"Tokenizer loaded.  Vocab size: {tokenizer.vocab_size:,}")
 
-# Build token cache for all 3 text modes (only builds if cache file is missing)
+# Build token cache for all 3 text modes using FILTERED OCR (only builds if cache file is missing)
 for tm in ['no_caption', 'tweet_ocr', 'all_text']:
     print(f"  Building token cache: {tm} ...", end=" ")
-    build_token_cache(text_mode=tm, max_seq_len=128, tokenizer=tokenizer)
+    build_token_cache(text_mode=tm, max_seq_len=128, tokenizer=tokenizer, ocr_source='filtered')
     print("done.")
 
 print("\\nToken caches ready.")
+"""
+
+CELL_4B_TEXT_PREVIEW = """
+# Cell 4b: Text input preview — see exactly what the model receives
+# Shows a real validation sample: raw fields → assembled string → tokenized & decoded.
+# This confirms that:
+#  (a) we are reading from ocr_filtered.json (phone UI noise removed)
+#  (b) the 128-token budget is used efficiently
+
+import json, os
+from pathlib import Path
+from src.data.preprocessing import clean_tweet_text, clean_ocr_text
+from src.data.splits import load_gt_json, load_ocr_data
+
+INPUT_DIR = Path(os.environ['MMHS_DATA_DIR'])
+
+# Load data sources
+gt_data  = load_gt_json()
+ocr_data = load_ocr_data('filtered')          # ← filtered (phone UI removed)
+
+# Load VLM captions if available
+captions_path = Path(os.environ['MMHS_PROJECT_ROOT']) / 'results' / 'vlm_captions.json'
+if captions_path.exists():
+    with open(captions_path, encoding='utf-8') as f:
+        raw_caps = json.load(f)
+    captions = {k: v['caption'] for k, v in raw_caps.items()}
+else:
+    captions = {}
+
+# Pick the first val ID that has OCR text (so output is more interesting)
+val_ids_file = INPUT_DIR / 'splits' / 'val_ids.txt'
+val_ids = val_ids_file.read_text().strip().splitlines()
+pick_id = next((sid for sid in val_ids if ocr_data.get(sid, '')), val_ids[0])
+
+entry      = gt_data[pick_id]
+raw_tweet  = entry['tweet_text']
+raw_ocr    = ocr_data.get(pick_id, '')
+caption    = captions.get(pick_id, '')
+
+clean_tw  = clean_tweet_text(raw_tweet)
+clean_ocr = clean_ocr_text(raw_ocr)
+
+print(f'Tweet ID : {pick_id}')
+print(f'Raw tweet: {raw_tweet[:120]}')
+print(f'Raw OCR  : {raw_ocr[:120]}')
+print(f'Caption  : {(caption[:120] + " ...") if len(caption) > 120 else caption}')
+print()
+print(f'Cleaned tweet: {clean_tw[:120]}')
+print(f'Cleaned OCR  : {clean_ocr[:120]}')
+print()
+
+for tm in ['tweet_ocr', 'all_text']:
+    if tm == 'tweet_ocr':
+        assembled = f'{clean_tw} {clean_ocr}'.strip()
+    else:  # all_text
+        parts = [p for p in [caption, clean_ocr, clean_tw] if p]
+        assembled = ' '.join(parts).strip()
+
+    print(f'=== text_mode = {tm!r} ===')
+    print(f'Assembled string ({len(assembled)} chars):')
+    print(f'  {assembled[:300] + (" [...]" if len(assembled) > 300 else "")}')
+
+    # Tokenize and show what the model actually sees inside the 128-token window
+    token_ids = tokenizer.encode(assembled)         # already padded/truncated to 128
+    decoded   = tokenizer.tokenizer.decode(token_ids, skip_special_tokens=False)
+    print(f'Tokens used: {len(token_ids)} / 128')
+    non_pad   = sum(1 for t in token_ids if t != tokenizer.tokenizer.pad_token_id)
+    print(f'Non-padding tokens: {non_pad}')
+    print(f'Decoded (what the model sees):')
+    print(f'  {decoded[:400]}')
+    print()
 """
 
 CELL_5_DATASET_SMOKE = """
@@ -595,6 +666,7 @@ cells = [
     code(CELL_2_CONFIG),
     code(CELL_3_PATHS),
     code(CELL_4_TOKENIZER),
+    code(CELL_4B_TEXT_PREVIEW),
     code(CELL_5_DATASET_SMOKE),
     code(CELL_6_MODEL_SMOKE),
     code(CELL_7_SMOKE_TRAIN),

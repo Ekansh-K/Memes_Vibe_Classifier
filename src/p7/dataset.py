@@ -88,6 +88,7 @@ def build_token_cache(
     text_mode: str,
     max_seq_len: int,
     tokenizer: "P7Tokenizer",
+    ocr_source: str = "filtered",
     force: bool = False,
 ) -> dict:
     """Pre-tokenize ALL samples and save to a .npy file for fast lookup.
@@ -110,9 +111,9 @@ def build_token_cache(
         logger.info(f"[P7] Token cache loaded: {len(data):,} samples.")
         return data
 
-    logger.info(f"[P7] Building token cache for text_mode='{text_mode}' ...")
+    logger.info(f"[P7] Building token cache for text_mode='{text_mode}' ocr_source='{ocr_source}' ...")
     gt_data   = load_gt_json()
-    ocr_data  = load_ocr_data("new")
+    ocr_data  = load_ocr_data(ocr_source)
     captions  = load_vlm_captions()
 
     result = {}

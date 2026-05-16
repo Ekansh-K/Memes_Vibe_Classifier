@@ -20,6 +20,7 @@ from src.utils.config import (
     NUM_CLASSES_FINE,
     LABEL_MAP_FINE,
     OCR_CONSOLIDATED,
+    OCR_CONSOLIDATED_FILTERED,
     OCR_DIR_OLD,
     OCR_DIR_NEW,
     PROCESSED_LABELS_FILE,
@@ -190,12 +191,14 @@ def load_processed_labels(force_reload: bool = False) -> dict:
 
 # ── OCR data loading ─────────────────────────────────────────────────────────
 
-def load_ocr_data(source: str = "new") -> dict:
+def load_ocr_data(source: str = "filtered") -> dict:
     """Load OCR text data.
 
     Args:
-        source: "old" (original img_txt/), "new" (re-extracted consolidated),
-                or "both" (merge with new taking priority).
+        source: "filtered" (default – cleaned ocr_filtered.json, no phone UI noise),
+                "new"      (raw ocr_consolidated.json, includes phone UI text),
+                "old"      (original per-image img_txt/ JSONs, 2018 quality),
+                "both"     (merge old+new, new takes priority).
 
     Returns:
         Dict mapping tweet_id → ocr text string.
@@ -205,6 +208,26 @@ def load_ocr_data(source: str = "new") -> dict:
 
     result = {}
 
+    # ── Filtered (default) ────────────────────────────────────────────────
+    if source == "filtered":
+        if OCR_CONSOLIDATED_FILTERED.exists():
+            with open(OCR_CONSOLIDATED_FILTERED, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            result = {k: v for k, v in data.items() if v and v.strip()}
+        else:
+            import warnings
+            warnings.warn(
+                f"ocr_filtered.json not found at {OCR_CONSOLIDATED_FILTERED}. "
+                "Falling back to ocr_consolidated.json (unfiltered). "
+                "Run scripts/filter_ocr.py to create ocr_filtered.json.",
+                stacklevel=2,
+            )
+            if OCR_CONSOLIDATED.exists():
+                with open(OCR_CONSOLIDATED, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                result = {k: v for k, v in data.items() if v and v.strip()}
+
+    # ── Old per-image JSONs ───────────────────────────────────────────────
     if source in ("old", "both"):
         if OCR_DIR_OLD.exists():
             for p in OCR_DIR_OLD.glob("*.json"):
@@ -217,6 +240,7 @@ def load_ocr_data(source: str = "new") -> dict:
                 except (json.JSONDecodeError, KeyError):
                     continue
 
+    # ── New consolidated (unfiltered) ─────────────────────────────────────
     if source in ("new", "both"):
         if OCR_CONSOLIDATED.exists():
             with open(OCR_CONSOLIDATED, "r", encoding="utf-8") as f:

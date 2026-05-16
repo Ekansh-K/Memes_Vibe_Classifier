@@ -78,10 +78,17 @@ SEED          = 42
 USE_AMP       = True       # fp16 mixed precision
 USE_DATA_PARALLEL = True   # use both T4 GPUs
 
+# ── STORAGE ─────────────────────────────────────────────────────────────────
+# IMPORTANT: Keep USE_IMAGE_STORE = False on Kaggle.
+# Building a memmap of 150K images fills /kaggle/working (~20 GB limit).
+# Images are loaded from the dataset input directory on the fly instead.
+USE_IMAGE_STORE = False    # DO NOT change to True on Kaggle
+
 print(f"Variation : P2-{VARIATION}")
 print(f"Text mode : {TEXT_MODE}")
 print(f"Eff batch : {S1_BATCH_SIZE} × {GRAD_ACCUM} = {S1_BATCH_SIZE * GRAD_ACCUM}")
-print(f"Max train : {MAX_TRAIN_SAMPLES or 'full dataset'}")"""))
+print(f"Max train : {MAX_TRAIN_SAMPLES or 'full dataset'}")
+print(f"Image store: {'enabled' if USE_IMAGE_STORE else 'DISABLED (disk-only, Kaggle-safe)'}")"""))
 
 # ── Cell 2: GPU check ─────────────────────────────────────────────────────────
 cells.append(md("## 🖥️ 2. GPU Verification"))
@@ -146,12 +153,32 @@ else:
     sys.path.insert(0, str(PROJECT_ROOT))
     print(f"Project root : {PROJECT_ROOT}")
 
+# Verify required files
+if IS_KAGGLE:
+    required = {
+        "GT labels"       : INPUT_DIR / "MMHS150K_GT.json",
+        "Processed labels": INPUT_DIR / "processed_labels.json",
+        "OCR filtered"    : INPUT_DIR / "ocr_filtered.json",
+        "Train split"     : INPUT_DIR / "splits" / "train_ids.txt",
+        "Val split"       : INPUT_DIR / "splits" / "val_ids.txt",
+        "Test split"      : INPUT_DIR / "splits" / "test_ids.txt",
+        "Images dir"      : INPUT_DIR / "img_resized",
+    }
+    all_ok = True
+    for name, p in required.items():
+        ok = p.exists()
+        print(f"  {'\u2713' if ok else '\u2717 MISSING'}  {name}: {p}")
+        if not ok:
+            all_ok = False
+    if not all_ok:
+        raise RuntimeError("Missing required dataset files! Check your Kaggle dataset attachment.")
+
 # Verify imports work
 try:
     from src.p2.config import P2Config
-    print("✓ P2 imports OK")
+    print("\u2713 P2 imports OK")
 except ImportError as e:
-    print(f"✗ Import error: {e}")
+    print(f"\u2717 Import error: {e}")
     print("  Check that project src/ is on sys.path")"""))
 
 # ── Cell 5: Build config ──────────────────────────────────────────────────────
@@ -173,6 +200,7 @@ config = P2Config(
     seed              = SEED,
     use_amp           = USE_AMP,
     use_data_parallel = USE_DATA_PARALLEL,
+    use_image_store   = USE_IMAGE_STORE,   # False on Kaggle — avoids filling disk
     max_train_samples = MAX_TRAIN_SAMPLES,
     max_val_samples   = MAX_VAL_SAMPLES,
     device            = "auto",
@@ -182,9 +210,92 @@ config = P2Config(
 print(f"Run name     : {config.run_name}")
 print(f"Checkpoint   : {config.run_dir}")
 print(f"Results      : {config.results_run_dir}")
+print(f"Image store  : {'enabled' if config.use_image_store else 'DISABLED (disk-only)'}")
 print(f"Eff batch    : {config.s1_batch_size} × {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")"""))
 
-# ── Cell 6: Smoke test ────────────────────────────────────────────────────────
+# ── Cell 5b: Text input preview ─────────────────────────────────────────────
+cells.append(md("## 🔍 5b. Text Input Preview — What the Model Actually Sees"))
+cells.append(cell("""# Shows a real validation sample: raw fields → assembled string → tokenized & decoded.
+# Confirms:
+#  (a) ocr_filtered.json is being read (phone UI noise removed)
+#  (b) the 128-token budget is used efficiently for the selected TEXT_MODE
+
+import json, os
+from pathlib import Path
+from transformers import AutoTokenizer
+from src.data.preprocessing import clean_tweet_text, clean_ocr_text
+from src.data.splits import load_gt_json, load_ocr_data
+
+INPUT_DIR = Path(os.environ['MMHS_DATA_DIR'])
+MAX_TEXT_LEN = config.max_text_len   # 128
+
+# Load data sources
+gt_data  = load_gt_json()
+ocr_data = load_ocr_data('filtered')   # ← filtered (phone UI removed)
+
+# Load VLM captions if available
+captions_path = Path(os.environ['MMHS_PROJECT_ROOT']) / 'results' / 'vlm_captions.json'
+if captions_path.exists():
+    with open(captions_path, encoding='utf-8') as f:
+        raw_caps = json.load(f)
+    captions = {k: v['caption'] for k, v in raw_caps.items()}
+else:
+    captions = {}
+    print("(No VLM captions found — all_text will fall back to tweet+OCR)")
+
+# Load the TweetEval tokenizer (same as TCAM uses)
+tok = AutoTokenizer.from_pretrained(config.tweet_model)
+
+# Pick the first val ID that has OCR text
+val_ids = (INPUT_DIR / 'splits' / 'val_ids.txt').read_text().strip().splitlines()
+pick_id = next((sid for sid in val_ids if ocr_data.get(sid, '')), val_ids[0])
+
+entry     = gt_data[pick_id]
+raw_tweet = entry['tweet_text']
+raw_ocr   = ocr_data.get(pick_id, '')
+caption   = captions.get(pick_id, '')
+
+clean_tw  = clean_tweet_text(raw_tweet)
+clean_ocr = clean_ocr_text(raw_ocr)
+
+print(f'Tweet ID  : {pick_id}')
+print(f'Raw tweet : {raw_tweet[:120]}')
+print(f'Raw OCR   : {raw_ocr[:120]}')
+print(f'Caption   : {(caption[:120] + " ...") if len(caption) > 120 else caption}')
+print()
+print(f'Cleaned tweet : {clean_tw[:120]}')
+print(f'Cleaned OCR   : {clean_ocr[:120]}')
+print()
+
+# Assemble exactly how P2Dataset._build_text() does it
+for tm in ['tweet_ocr', 'all_text']:
+    if tm == 'tweet_ocr':
+        parts = [clean_tw, clean_ocr]
+    else:  # all_text: caption [SEP] ocr_text [SEP] tweet_text
+        parts = [caption, clean_ocr, clean_tw]
+    assembled = f' {tok.sep_token} '.join(p for p in parts if p)
+
+    enc = tok(
+        assembled,
+        max_length=MAX_TEXT_LEN,
+        truncation=True,
+        padding='max_length',
+        return_tensors='pt',
+    )
+    ids       = enc['input_ids'][0].tolist()
+    non_pad   = sum(1 for t in ids if t != tok.pad_token_id)
+    decoded   = tok.decode(ids, skip_special_tokens=False)
+
+    print(f'=== text_mode = {tm!r}  (max_text_len={MAX_TEXT_LEN}) ===')
+    print(f'Assembled ({len(assembled)} chars):')
+    print(f'  {assembled[:350] + (" [...]" if len(assembled) > 350 else "")}')
+    print(f'Tokens used (non-pad): {non_pad} / {MAX_TEXT_LEN}')
+    print(f'Decoded (model input):')
+    print(f'  {decoded[:450]}')
+    print()
+"""))
+
+
 cells.append(md("## 🧪 6. Smoke Test — Validate Architecture (Optional)"))
 cells.append(cell("""# Run this cell BEFORE full training to verify shapes and frozen params
 import torch

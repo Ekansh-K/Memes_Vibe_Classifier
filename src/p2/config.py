@@ -69,9 +69,9 @@ class P2Config:
 
     # ── Data ────────────────────────────────────────────────────────────────
     img_size: int = 224
-    ocr_source: str = "new"       # loads ocr_consolidated_filtered.json
+    ocr_source: str = "filtered"      # "filtered" (clean), "new" (raw), "old", or "both"
     multilabel_threshold: float = 2 / 3  # soft_label[c] >= 2/3 → active
-    use_image_store: bool = True
+    use_image_store: bool = False  # keep False on Kaggle (disk space limited)
     exclude_full_disagreement: bool = False
 
     # ── Dataset size control ────────────────────────────────────────────────

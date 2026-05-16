@@ -31,7 +31,7 @@ class P7Config:
     run_name: str = "p7_D_tweet_ocr"
 
     # ── Data ────────────────────────────────────────────────────────────────
-    ocr_source: str = "new"          # "old", "new", or "both"
+    ocr_source: str = "filtered"     # "filtered" (clean), "new" (raw), "old", or "both"
     img_size: int = 224
     max_seq_len: int = 128
     exclude_full_disagreement: bool = False
