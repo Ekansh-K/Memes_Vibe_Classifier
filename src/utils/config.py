@@ -40,9 +40,9 @@ LABEL_MAP_FINE = {
 }
 LABEL_MAP_BINARY = {0: "NotHate", 1: "Hate"}
 TOTAL_SAMPLES = 149_823
-TRAIN_SIZE = 134_823
-VAL_SIZE = 5_000
-TEST_SIZE = 10_000
+TRAIN_SIZE    = 119_858   # 80%  — stratified, hate=17.2% (matches dataset rate)
+VAL_SIZE      =  14_982   # 10%  — stratified, hate=17.2%
+TEST_SIZE     =  14_983   # 10%  — stratified, hate=17.2%
 
 
 @dataclass

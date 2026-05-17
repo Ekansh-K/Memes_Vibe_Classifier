@@ -63,17 +63,17 @@ MAX_VAL_SAMPLES   = None
 # ── STAGE 1 HYPERPARAMETERS ──────────────────────────────────────────────────
 S1_EPOCHS     = 5
 S1_LR         = 2e-4
-S1_BATCH_SIZE = 32         # single T4; effective batch = 32 × 4 = 128
+S1_BATCH_SIZE = 128        # single T4 has 15GB, only 2.8GB used at bs=32 → safe to 4×
 S1_WARMUP     = 0.05       # 5% of total steps
 
 # ── STAGE 2 HYPERPARAMETERS (C/D only) ──────────────────────────────────────
 S2_EPOCHS     = 7
 S2_LR         = 1e-4
-S2_BATCH_SIZE = 32
+S2_BATCH_SIZE = 128
 S2_WARMUP     = 0.10       # 10% of total steps
 
 # ── SHARED ───────────────────────────────────────────────────────────────────
-GRAD_ACCUM    = 4          # effective batch = batch_size × grad_accum = 128
+GRAD_ACCUM    = 1          # eff batch = 128×1 = 128; no accumulation needed
 SEED          = 42
 USE_AMP       = True       # fp16 mixed precision
 USE_DATA_PARALLEL = False   # CLIP ViT-L/14 is too large for clean DataParallel replication
@@ -181,6 +181,90 @@ except ImportError as e:
     print(f"\u2717 Import error: {e}")
     print("  Check that project src/ is on sys.path")"""))
 
+# ── Cell 4b: Generate stratified splits on Kaggle ────────────────────────────
+cells.append(md("## 📂 4b. Generate Stratified 80/10/10 Splits"))
+cells.append(cell("""# Regenerates train/val/test splits with correct stratification.
+# Original dataset splits had a severe class imbalance mismatch:
+#   Train: 15.3% hate  |  Val: 34.7% hate  |  Test: 34.8% hate
+# New stratified splits preserve the true dataset hate rate (~17.2%) across ALL splits.
+# This cell writes splits to /kaggle/working/splits/ and patches MMHS_DATA_DIR
+# so the trainer reads from there instead of the read-only input directory.
+
+import json, random, os
+from collections import defaultdict
+from pathlib import Path
+
+INPUT_DIR = Path(os.environ['MMHS_DATA_DIR'])
+CODE_DIR  = Path(os.environ['MMHS_PROJECT_ROOT'])
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+SEED       = 42
+TRAIN_FRAC = 0.80
+VAL_FRAC   = 0.10
+
+# ── Load labels ───────────────────────────────────────────────────────────────
+with open(INPUT_DIR / 'processed_labels.json', encoding='utf-8') as f:
+    labels = json.load(f)
+
+all_ids = list(labels.keys())
+print(f'Total labelled samples: {len(all_ids):,}')
+
+# ── Stratify by binary label ──────────────────────────────────────────────────
+buckets = defaultdict(list)
+for tid in all_ids:
+    buckets[labels[tid]['hard_label_binary']].append(tid)
+
+print(f'  NotHate: {len(buckets[0]):,} ({len(buckets[0])/len(all_ids)*100:.1f}%)')
+print(f'  Hate   : {len(buckets[1]):,} ({len(buckets[1])/len(all_ids)*100:.1f}%)')
+
+# ── Split ─────────────────────────────────────────────────────────────────────
+rng = random.Random(SEED)
+train_ids, val_ids, test_ids = [], [], []
+
+for cls, ids in sorted(buckets.items()):
+    rng.shuffle(ids)
+    n_train = round(len(ids) * TRAIN_FRAC)
+    n_val   = round(len(ids) * VAL_FRAC)
+    train_ids.extend(ids[:n_train])
+    val_ids.extend(ids[n_train : n_train + n_val])
+    test_ids.extend(ids[n_train + n_val :])
+
+rng.shuffle(train_ids); rng.shuffle(val_ids); rng.shuffle(test_ids)
+
+# ── Verify no leakage ─────────────────────────────────────────────────────────
+assert len(set(train_ids) & set(val_ids)) == 0, 'Train/Val overlap!'
+assert len(set(train_ids) & set(test_ids)) == 0, 'Train/Test overlap!'
+assert len(set(val_ids) & set(test_ids)) == 0, 'Val/Test overlap!'
+assert len(train_ids) + len(val_ids) + len(test_ids) == len(all_ids)
+
+# ── Write to writable location ────────────────────────────────────────────────
+SPLITS_OUT = CODE_DIR / 'splits'
+SPLITS_OUT.mkdir(parents=True, exist_ok=True)
+
+for name, ids in [('train', train_ids), ('val', val_ids), ('test', test_ids)]:
+    (SPLITS_OUT / f'{name}_ids.txt').write_text('\n'.join(ids) + '\n', encoding='utf-8')
+
+# ── Patch env so loader reads new splits ─────────────────────────────────────
+# We create a thin wrapper dir with splits/ → new files, rest → original input
+# Simplest: set MMHS_SPLITS_OVERRIDE so load_split_ids checks it first
+import src.data.splits as _splits_mod
+import src.utils.config as _cfg_mod
+from pathlib import Path as _Path
+
+# Monkey-patch SPLITS_DIR to point to our new writable location
+_splits_mod.SPLITS_DIR = SPLITS_OUT   # module-level var used by load_split_ids
+_cfg_mod.SPLITS_DIR    = SPLITS_OUT
+
+total = len(train_ids) + len(val_ids) + len(test_ids)
+print(f'\nNew stratified splits (seed={SEED}):')
+for name, ids in [('train', train_ids), ('val', val_ids), ('test', test_ids)]:
+    hate = sum(1 for i in ids if labels[i]['hard_label_binary'] == 1)
+    print(f'  {name:<5}: {len(ids):>7,}  ({len(ids)/total*100:.1f}%)  '
+          f'hate={hate:,} ({hate/len(ids)*100:.1f}%)')
+print('\nNo leakage detected. Splits written and loader patched.')
+"""))
+
+
 # ── Cell 5: Build config ──────────────────────────────────────────────────────
 cells.append(md("## 🔧 5. Build Experiment Config"))
 cells.append(cell("""from src.p2.config import P2Config
@@ -211,7 +295,51 @@ print(f"Run name     : {config.run_name}")
 print(f"Checkpoint   : {config.run_dir}")
 print(f"Results      : {config.results_run_dir}")
 print(f"Image store  : {'enabled' if config.use_image_store else 'DISABLED (disk-only)'}")
-print(f"Eff batch    : {config.s1_batch_size} × {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")"""))
+print(f"Eff batch    : {config.s1_batch_size} x {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")"""))
+
+# ── Cell 5c: Split verification ───────────────────────────────────────────────
+cells.append(md("## 📊 5c. Split Verification — Confirm 80/10/10 Balanced Splits"))
+cells.append(cell("""# Verifies that the splits loaded by the trainer have:
+#  - Correct 80/10/10 proportions
+#  - Matching hate-rate across train/val/test (no distribution mismatch)
+#  - No ID overlap between splits
+import json, os
+from pathlib import Path
+from src.data.splits import load_split_ids, load_processed_labels
+
+labels   = load_processed_labels()
+
+rows = []
+total_all = 0
+for split in ['train', 'val', 'test']:
+    ids  = load_split_ids(split)
+    hate = sum(1 for i in ids if i in labels and labels[i]['hard_label_binary'] == 1)
+    rows.append({'split': split, 'n': len(ids), 'hate': hate})
+    total_all += len(ids)
+
+print(f'{'Split':<6}  {'Count':>8}  {'% total':>8}  {'Hate':>7}  {'Hate %':>8}')
+print('-' * 46)
+for r in rows:
+    print(f"{r['split']:<6}  {r['n']:>8,}  {r['n']/total_all*100:>7.1f}%  "
+          f"{r['hate']:>7,}  {r['hate']/r['n']*100:>7.1f}%")
+print('-' * 46)
+print(f"{'TOTAL':<6}  {total_all:>8,}")
+
+# Verify hate rate is consistent (all within 1% of each other)
+hate_rates = [r['hate'] / r['n'] for r in rows]
+assert max(hate_rates) - min(hate_rates) < 0.02, \
+    f'Hate rate mismatch across splits: {[f"{r:.3f}" for r in hate_rates]}'
+print('\nHate rate consistent across splits (< 2% variance) -- OK')
+
+# Verify no overlap
+train_set = set(load_split_ids('train'))
+val_set   = set(load_split_ids('val'))
+test_set  = set(load_split_ids('test'))
+assert len(train_set & val_set) == 0,  'FAIL: Train/Val overlap!'
+assert len(train_set & test_set) == 0, 'FAIL: Train/Test overlap!'
+assert len(val_set & test_set) == 0,   'FAIL: Val/Test overlap!'
+print('No overlap between splits -- OK')
+"""))
 
 # ── Cell 5b: Text input preview ─────────────────────────────────────────────
 cells.append(md("## 🔍 5b. Text Input Preview — What the Model Actually Sees"))
