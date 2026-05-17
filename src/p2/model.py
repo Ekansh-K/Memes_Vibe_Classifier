@@ -172,7 +172,7 @@ class TCAM(nn.Module):
     def _encode_text(
         self, texts: list[str], device: torch.device
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Tokenize and encode text through frozen TweetEval.
+        """Tokenize and encode text through TweetEval (frozen or partially unfrozen).
 
         Args:
             texts: list of B text strings.
@@ -189,11 +189,17 @@ class TCAM(nn.Module):
             truncation=True,
             max_length=self.max_text_len,
         )
-        # Move tokenizer outputs to the correct device
         enc = {k: v.to(device) for k, v in enc.items()}
 
-        with torch.no_grad():
+        # Use no_grad only when tweet_encoder is fully frozen.
+        # When partially unfrozen (Phase 2), gradients must flow through
+        # the unfrozen layers — no_grad would block them entirely.
+        _tweet_has_grad = any(p.requires_grad for p in self.tweet_encoder.parameters())
+        if _tweet_has_grad:
             out = self.tweet_encoder(**enc)
+        else:
+            with torch.no_grad():
+                out = self.tweet_encoder(**enc)
 
         T = out.last_hidden_state.float()       # (B, seq_len, 768)
         pad_mask = (enc["attention_mask"] == 0)  # (B, seq_len) True = pad
@@ -295,7 +301,7 @@ class TCAM(nn.Module):
     @classmethod
     def from_config(cls, config, num_classes: int) -> "TCAM":
         """Construct TCAM from a P2Config instance."""
-        return cls(
+        model = cls(
             num_classes=num_classes,
             clip_model=config.clip_model,
             tweet_model=config.tweet_model,
@@ -305,4 +311,59 @@ class TCAM(nn.Module):
             head_hidden=config.head_hidden,
             dropout=config.head_dropout,
             max_text_len=config.max_text_len,
+        )
+        # Optionally unfreeze last N TweetEval layers (Phase 2)
+        n = getattr(config, "unfreeze_tweet_last_n", 0)
+        if n > 0:
+            model.unfreeze_tweet_layers(n)
+        return model
+
+    def unfreeze_tweet_layers(self, n: int) -> None:
+        """Unfreeze the last n transformer layers of tweet_encoder.
+
+        All other TweetEval layers remain frozen. Use with a much lower LR
+        (tweet_encoder_lr ≈ 1e-5) than the head/cross_attn LR to avoid
+        catastrophic forgetting of general Twitter language understanding.
+
+        IMPORTANT — pooler is intentionally NOT unfrozen:
+            TCAM reads `last_hidden_state` (token-level sequence output, shape
+            [B, seq, 768]) for cross-attention. The pooler is a sentence-level
+            Linear+tanh on the [CLS] token used by classification heads —
+            it is architecturally irrelevant here. Unfreezing it would add
+            ~590K dead parameters consuming optimizer capacity for zero benefit.
+        """
+        if n <= 0:
+            return
+        layers = self.tweet_encoder.encoder.layer
+        total = len(layers)
+        n = min(n, total)  # clamp to actual layer count
+        for layer in layers[-n:]:
+            for p in layer.parameters():
+                p.requires_grad = True
+        # pooler intentionally NOT unfrozen — see docstring
+        n_trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        logger.info(
+            f"[TCAM] Unfrozen last {n}/{total} TweetEval layers (pooler frozen). "
+            f"Trainable params: {n_trainable:,}"
+        )
+
+    def unfreeze_clip_last_layer(self) -> None:
+        """Unfreeze only the final transformer block of CLIP's visual encoder.
+
+        CLIP ViT-L/14 has 24 ResidualAttentionBlock layers.
+        Use this as a LAST RESORT (Phase 3b) if TweetEval unfreezing alone
+        cannot push Stage 1 F1 past 0.69.
+
+        IMPORTANT — use a very low LR (clip_encoder_lr ≈ 1e-6):
+            CLIP features encode visual semantics from 400M image-text contrastive
+            pairs and are far more brittle than TweetEval text features. Using
+            LR=1e-5 will corrupt the visual representation.
+        """
+        final_block = self._clip_model.visual.transformer.resblocks[-1]
+        for p in final_block.parameters():
+            p.requires_grad = True
+        n_trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        logger.info(
+            f"[TCAM] Unfrozen CLIP final visual block. "
+            f"Trainable params: {n_trainable:,}"
         )

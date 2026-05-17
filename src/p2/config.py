@@ -59,13 +59,18 @@ class P2Config:
     max_grad_norm: float = 1.0
     scheduler: str = "cosine"
     use_amp: bool = True          # fp16
-    early_stop_patience: int = 3  # epochs without val improvement → stop
+    early_stop_patience: int = 5  # epochs without val improvement → stop
     label_smoothing: float = 0.0
 
     # ── Hardware ────────────────────────────────────────────────────────────
     device: str = "auto"          # "auto" → cuda if available, else cpu
     use_data_parallel: bool = True  # nn.DataParallel across all visible GPUs
     num_workers: int = 4
+
+    # ── Partial fine-tuning (Phase 2) ───────────────────────────────────
+    unfreeze_tweet_last_n: int = 0      # 0=fully frozen; 2=unfreeze last 2 TweetEval layers
+    tweet_encoder_lr: float = 1e-5     # LR for unfrozen TweetEval layers (much lower than head)
+    clip_encoder_lr: float = 1e-6      # LR for unfrozen CLIP layers (Phase 3b, last resort)
 
     # ── Data ────────────────────────────────────────────────────────────────
     img_size: int = 224

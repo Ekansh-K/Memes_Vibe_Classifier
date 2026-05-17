@@ -141,10 +141,19 @@ def _train_epoch(
     scheduler=None,
 ) -> dict:
     model.train()
-    # Keep frozen encoders in eval mode even during training
     _module = _get_model_module(model)
+    # CLIP is always fully frozen → always eval()
     _module._clip_model.eval()
-    _module.tweet_encoder.eval()
+    # TweetEval: set only fully-frozen layers to eval().
+    # Unfrozen layers (Phase 2) should remain in train() so their
+    # internal Dropout runs correctly during fine-tuning.
+    for layer in _module.tweet_encoder.encoder.layer:
+        if not any(p.requires_grad for p in layer.parameters()):
+            layer.eval()
+    # Embeddings and pooler are always frozen → eval()
+    _module.tweet_encoder.embeddings.eval()
+    if hasattr(_module.tweet_encoder, "pooler"):
+        _module.tweet_encoder.pooler.eval()
 
     total_loss = 0.0
     n_steps = 0
@@ -332,11 +341,42 @@ def train_stage(
         label_smoothing=config.label_smoothing,
     )
 
-    # Trainable params only — CLIP and TweetEval excluded automatically
-    trainable_params = [p for p in model.parameters() if p.requires_grad]
-    n_trainable = sum(p.numel() for p in trainable_params)
+    # ── Optimizer with differential learning rates ────────────────────────
+    # Head/proj_t/cross_attn: full LR
+    # Unfrozen TweetEval layers: much lower LR (tweet_encoder_lr ≈ 1e-5)
+    # Unfrozen CLIP layers:     even lower LR (clip_encoder_lr ≈ 1e-6)
+    head_params    = []
+    tweet_params   = []
+    clip_params    = []
+    for name, p in model.named_parameters():
+        if not p.requires_grad:
+            continue
+        if "tweet_encoder" in name:
+            tweet_params.append(p)
+        elif "_clip_model" in name:
+            clip_params.append(p)
+        else:
+            head_params.append(p)
+
+    param_groups = [{"params": head_params, "lr": lr}]
+    if tweet_params:
+        tweet_lr = getattr(config, "tweet_encoder_lr", 1e-5)
+        param_groups.append({"params": tweet_params, "lr": tweet_lr})
+        logger.info(
+            f"[P2 Trainer] Differential LR — head: {lr:.1e}  "
+            f"tweet_encoder: {tweet_lr:.1e}  ({len(tweet_params)} param tensors)"
+        )
+    if clip_params:
+        clip_lr = getattr(config, "clip_encoder_lr", 1e-6)
+        param_groups.append({"params": clip_params, "lr": clip_lr})
+        logger.info(
+            f"[P2 Trainer] Differential LR — clip_encoder: {clip_lr:.1e}  "
+            f"({len(clip_params)} param tensors)"
+        )
+
+    n_trainable = sum(p.numel() for g in param_groups for p in g["params"])
     logger.info(f"[P2 Trainer] Trainable params: {n_trainable:,}")
-    optimizer = AdamW(trainable_params, lr=lr, weight_decay=config.weight_decay)
+    optimizer = AdamW(param_groups, weight_decay=config.weight_decay)
 
     # AMP scaler
     scaler = (

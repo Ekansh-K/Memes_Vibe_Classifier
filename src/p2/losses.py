@@ -36,7 +36,7 @@ def compute_binary_pos_weight(labels: list[int], device: torch.device) -> torch.
 
 def compute_class_weights(
     labels: list[int], num_classes: int, device: torch.device,
-    max_weight: float = 50.0,
+    max_weight: float = 100.0,
 ) -> torch.Tensor:
     """Compute inverse-frequency class weights, capped at max_weight.
 
@@ -61,16 +61,17 @@ def compute_multilabel_pos_weights(
     multilabel_vectors: list[list[float]],
     num_categories: int,
     device: torch.device,
-    max_pos_weight: float = 50.0,
+    max_pos_weight: float = 100.0,
 ) -> torch.Tensor:
     """Compute per-category pos_weight for multilabel BCEWithLogitsLoss.
 
     For each category c:
         pos_weight[c] = n_negative[c] / n_positive[c]
 
-    Capped at max_pos_weight (default=50) to prevent gradient instability
+    Capped at max_pos_weight (default=100) to prevent gradient instability
     for extremely rare classes (e.g. Religion at ~0.6% of Stage 2 data
-    would give pos_weight ~156 without capping).
+    would give pos_weight ~156 without capping; cap=100 gives 66% of proper signal
+    vs cap=50 which gave only 33%).
     """
     arr = torch.tensor(multilabel_vectors, dtype=torch.float32)
     n_pos = arr.sum(dim=0).clamp(min=1)

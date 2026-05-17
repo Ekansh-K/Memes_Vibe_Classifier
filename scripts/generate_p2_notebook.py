@@ -61,13 +61,19 @@ MAX_TRAIN_SAMPLES = None   # e.g. 1000 for a quick smoke test
 MAX_VAL_SAMPLES   = None
 
 # ── STAGE 1 HYPERPARAMETERS ──────────────────────────────────────────────────
-S1_EPOCHS     = 5
-S1_LR         = 2e-4
+S1_EPOCHS     = 8          # 8 for unfrozen Phase 2 run (unfrozen layers need more steps)
+S1_LR         = 1e-4       # reduced 2e-4 → 1e-4: head converges but needs finer settling
 S1_BATCH_SIZE = 128        # single T4 has 15GB, only 2.8GB used at bs=32 → safe to 4×
 S1_WARMUP     = 0.05       # 5% of total steps
 
+# ── PARTIAL FINE-TUNING (Phase 2) ────────────────────────────────────────────
+# 0 = fully frozen (original baseline)
+# 2 = unfreeze last 2 TweetEval transformer layers (Phase 2)
+# 3 = unfreeze last 3 layers (Phase 3a, only if Phase 2 S1 F1 < 0.69)
+UNFREEZE_TWEET_LAYERS = 2
+
 # ── STAGE 2 HYPERPARAMETERS (C/D only) ──────────────────────────────────────
-S2_EPOCHS     = 7
+S2_EPOCHS     = 15
 S2_LR         = 1e-4
 S2_BATCH_SIZE = 128
 S2_WARMUP     = 0.10       # 10% of total steps
@@ -86,8 +92,9 @@ USE_IMAGE_STORE = False    # DO NOT change to True on Kaggle
 
 print(f"Variation : P2-{VARIATION}")
 print(f"Text mode : {TEXT_MODE}")
-print(f"Eff batch : {S1_BATCH_SIZE} × {GRAD_ACCUM} = {S1_BATCH_SIZE * GRAD_ACCUM}")
+print(f"Eff batch : {S1_BATCH_SIZE} x {GRAD_ACCUM} = {S1_BATCH_SIZE * GRAD_ACCUM}")
 print(f"Max train : {MAX_TRAIN_SAMPLES or 'full dataset'}")
+print(f"Unfreeze  : {UNFREEZE_TWEET_LAYERS} TweetEval layers ({'frozen baseline' if UNFREEZE_TWEET_LAYERS == 0 else 'Phase 2 fine-tuning'})")
 print(f"Image store: {'enabled' if USE_IMAGE_STORE else 'DISABLED (disk-only, Kaggle-safe)'}")"""))
 
 # ── Cell 2: GPU check ─────────────────────────────────────────────────────────
@@ -242,26 +249,23 @@ SPLITS_OUT = CODE_DIR / 'splits'
 SPLITS_OUT.mkdir(parents=True, exist_ok=True)
 
 for name, ids in [('train', train_ids), ('val', val_ids), ('test', test_ids)]:
-    (SPLITS_OUT / f'{name}_ids.txt').write_text('\n'.join(ids) + '\n', encoding='utf-8')
+    (SPLITS_OUT / f'{name}_ids.txt').write_text(chr(10).join(ids) + chr(10), encoding='utf-8')
 
 # ── Patch env so loader reads new splits ─────────────────────────────────────
-# We create a thin wrapper dir with splits/ → new files, rest → original input
-# Simplest: set MMHS_SPLITS_OVERRIDE so load_split_ids checks it first
 import src.data.splits as _splits_mod
 import src.utils.config as _cfg_mod
-from pathlib import Path as _Path
 
 # Monkey-patch SPLITS_DIR to point to our new writable location
 _splits_mod.SPLITS_DIR = SPLITS_OUT   # module-level var used by load_split_ids
 _cfg_mod.SPLITS_DIR    = SPLITS_OUT
 
 total = len(train_ids) + len(val_ids) + len(test_ids)
-print(f'\nNew stratified splits (seed={SEED}):')
+print('New stratified splits (seed=%d):' % SEED)
 for name, ids in [('train', train_ids), ('val', val_ids), ('test', test_ids)]:
     hate = sum(1 for i in ids if labels[i]['hard_label_binary'] == 1)
-    print(f'  {name:<5}: {len(ids):>7,}  ({len(ids)/total*100:.1f}%)  '
-          f'hate={hate:,} ({hate/len(ids)*100:.1f}%)')
-print('\nNo leakage detected. Splits written and loader patched.')
+    print('  %-5s  %7d  (%.1f%%)  hate=%d (%.1f%%)' % (
+        name, len(ids), len(ids)/total*100, hate, hate/len(ids)*100))
+print('No leakage detected. Splits written and loader patched.')
 """))
 
 
@@ -270,32 +274,34 @@ cells.append(md("## 🔧 5. Build Experiment Config"))
 cells.append(cell("""from src.p2.config import P2Config
 
 config = P2Config(
-    variation         = VARIATION,
-    text_mode         = TEXT_MODE,
-    s1_epochs         = S1_EPOCHS,
-    s1_lr             = S1_LR,
-    s1_batch_size     = S1_BATCH_SIZE,
-    s1_warmup_ratio   = S1_WARMUP,
-    s2_epochs         = S2_EPOCHS,
-    s2_lr             = S2_LR,
-    s2_batch_size     = S2_BATCH_SIZE,
-    s2_warmup_ratio   = S2_WARMUP,
-    grad_accum_steps  = GRAD_ACCUM,
-    seed              = SEED,
-    use_amp           = USE_AMP,
-    use_data_parallel = USE_DATA_PARALLEL,
-    use_image_store   = USE_IMAGE_STORE,   # False on Kaggle — avoids filling disk
-    max_train_samples = MAX_TRAIN_SAMPLES,
-    max_val_samples   = MAX_VAL_SAMPLES,
-    device            = "auto",
-    num_workers       = 2,   # Kaggle safe default
+    variation              = VARIATION,
+    text_mode              = TEXT_MODE,
+    s1_epochs              = S1_EPOCHS,
+    s1_lr                  = S1_LR,
+    s1_batch_size          = S1_BATCH_SIZE,
+    s1_warmup_ratio        = S1_WARMUP,
+    s2_epochs              = S2_EPOCHS,
+    s2_lr                  = S2_LR,
+    s2_batch_size          = S2_BATCH_SIZE,
+    s2_warmup_ratio        = S2_WARMUP,
+    grad_accum_steps       = GRAD_ACCUM,
+    seed                   = SEED,
+    use_amp                = USE_AMP,
+    use_data_parallel      = USE_DATA_PARALLEL,
+    use_image_store        = USE_IMAGE_STORE,   # False on Kaggle — avoids filling disk
+    max_train_samples      = MAX_TRAIN_SAMPLES,
+    max_val_samples        = MAX_VAL_SAMPLES,
+    unfreeze_tweet_last_n  = UNFREEZE_TWEET_LAYERS,
+    device                 = "auto",
+    num_workers            = 2,   # Kaggle safe default
 )
 
 print(f"Run name     : {config.run_name}")
 print(f"Checkpoint   : {config.run_dir}")
 print(f"Results      : {config.results_run_dir}")
 print(f"Image store  : {'enabled' if config.use_image_store else 'DISABLED (disk-only)'}")
-print(f"Eff batch    : {config.s1_batch_size} x {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")"""))
+print(f"Eff batch    : {config.s1_batch_size} x {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")
+print(f"Unfreeze     : {config.unfreeze_tweet_last_n} TweetEval layers  tweet_lr={config.tweet_encoder_lr:.0e}")"""))
 
 # ── Cell 5c: Split verification ───────────────────────────────────────────────
 cells.append(md("## 📊 5c. Split Verification — Confirm 80/10/10 Balanced Splits"))
@@ -317,19 +323,20 @@ for split in ['train', 'val', 'test']:
     rows.append({'split': split, 'n': len(ids), 'hate': hate})
     total_all += len(ids)
 
-print(f'{'Split':<6}  {'Count':>8}  {'% total':>8}  {'Hate':>7}  {'Hate %':>8}')
+HDR = '%-6s  %8s  %8s  %7s  %8s' % ('Split', 'Count', '% total', 'Hate', 'Hate %')
+print(HDR)
 print('-' * 46)
 for r in rows:
-    print(f"{r['split']:<6}  {r['n']:>8,}  {r['n']/total_all*100:>7.1f}%  "
-          f"{r['hate']:>7,}  {r['hate']/r['n']*100:>7.1f}%")
+    print('%-6s  %8d  %7.1f%%  %7d  %7.1f%%' % (
+        r['split'], r['n'], r['n']/total_all*100, r['hate'], r['hate']/r['n']*100))
 print('-' * 46)
-print(f"{'TOTAL':<6}  {total_all:>8,}")
+print('%-6s  %8d' % ('TOTAL', total_all))
 
-# Verify hate rate is consistent (all within 1% of each other)
+# Verify hate rate is consistent (all within 2% of each other)
 hate_rates = [r['hate'] / r['n'] for r in rows]
 assert max(hate_rates) - min(hate_rates) < 0.02, \
-    f'Hate rate mismatch across splits: {[f"{r:.3f}" for r in hate_rates]}'
-print('\nHate rate consistent across splits (< 2% variance) -- OK')
+    'Hate rate mismatch across splits: ' + str([round(r,3) for r in hate_rates])
+print('Hate rate consistent across splits (< 2% variance) -- OK')
 
 # Verify no overlap
 train_set = set(load_split_ids('train'))
