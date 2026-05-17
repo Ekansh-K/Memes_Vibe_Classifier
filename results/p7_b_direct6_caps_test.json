@@ -1,0 +1,75 @@
+{
+  "multiclass/accuracy": 0.5919,
+  "multiclass/macro_f1": 0.43490587449637075,
+  "multiclass/weighted_f1": 0.6005932349836364,
+  "multiclass/precision_macro": 0.40822702368653846,
+  "multiclass/recall_macro": 0.48459493276036464,
+  "multiclass/NotHate/f1": 0.6951090923838106,
+  "multiclass/NotHate/precision": 0.7379025314275874,
+  "multiclass/NotHate/recall": 0.6570070530512113,
+  "multiclass/Racist/f1": 0.37611572791628195,
+  "multiclass/Racist/precision": 0.38476070528967254,
+  "multiclass/Racist/recall": 0.36785069235400364,
+  "multiclass/Sexist/f1": 0.30873493975903615,
+  "multiclass/Sexist/precision": 0.2417452830188679,
+  "multiclass/Sexist/recall": 0.4270833333333333,
+  "multiclass/Homophobe/f1": 0.5796491228070175,
+  "multiclass/Homophobe/precision": 0.46300448430493274,
+  "multiclass/Homophobe/recall": 0.774859287054409,
+  "multiclass/Religion/f1": 0.15384615384615385,
+  "multiclass/Religion/precision": 0.14285714285714285,
+  "multiclass/Religion/recall": 0.16666666666666666,
+  "multiclass/OtherHate/f1": 0.49598021026592454,
+  "multiclass/OtherHate/precision": 0.47909199522102747,
+  "multiclass/OtherHate/recall": 0.514102564102564,
+  "multiclass/confusion_matrix": [
+    [
+      4285,
+      894,
+      542,
+      412,
+      13,
+      376
+    ],
+    [
+      952,
+      611,
+      30,
+      22,
+      6,
+      40
+    ],
+    [
+      213,
+      19,
+      205,
+      30,
+      1,
+      12
+    ],
+    [
+      78,
+      14,
+      23,
+      413,
+      0,
+      5
+    ],
+    [
+      13,
+      2,
+      2,
+      0,
+      4,
+      3
+    ],
+    [
+      266,
+      48,
+      46,
+      15,
+      4,
+      401
+    ]
+  ]
+}

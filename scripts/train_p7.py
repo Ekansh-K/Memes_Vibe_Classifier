@@ -146,6 +146,24 @@ def build_stage_subset(dataset: MMHS150KDataset, stage: int, max_samples=None):
     return Subset(dataset, keep)
 
 
+def compute_class_weights_for_dataset(dataset, num_classes: int) -> torch.Tensor:
+    if isinstance(dataset, Subset):
+        base = dataset.dataset
+        indices = dataset.indices
+        labels = [int(base.labels[base.split_ids[i]]["hard_label_6class"]) for i in indices]
+    else:
+        labels = [int(dataset.labels[sid]["hard_label_6class"]) for sid in dataset.split_ids]
+
+    counts = [0] * num_classes
+    for lbl in labels:
+        if 0 <= lbl < num_classes:
+            counts[lbl] += 1
+
+    total = max(len(labels), 1)
+    weights = [total / (num_classes * max(c, 1)) for c in counts]
+    return torch.tensor(weights, dtype=torch.float32)
+
+
 def evaluate_model(model, loader, device, stage: int) -> dict:
     model.eval()
     ys = []
@@ -275,7 +293,12 @@ def main():
     model.to(device)
 
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
-    criterion = torch.nn.CrossEntropyLoss()
+    if stage == 0:
+        class_weights = compute_class_weights_for_dataset(train_ds, num_classes).to(device)
+        print(f"[P7] Using weighted CrossEntropy for 6-class: {class_weights.tolist()}")
+        criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
 
     ckpt_dir = Path(CHECKPOINTS_DIR)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -294,6 +317,7 @@ def main():
         "num_classes": num_classes,
         "use_captions": args.use_captions,
         "captions_file": args.captions_file,
+        "loss": "ce_weighted" if stage == 0 else "ce",
     }
     wandb_run = maybe_init_wandb(args, cfg_for_log)
 
@@ -339,6 +363,7 @@ def main():
                         "num_classes": num_classes,
                         "use_captions": args.use_captions,
                         "captions_file": args.captions_file,
+                        "loss": "ce_weighted" if stage == 0 else "ce",
                         "global_step": global_step,
                     },
                     step_ckpt,
@@ -371,6 +396,7 @@ def main():
                 "num_classes": num_classes,
                 "use_captions": args.use_captions,
                 "captions_file": args.captions_file,
+                "loss": "ce_weighted" if stage == 0 else "ce",
                 "epoch": epoch,
                 "global_step": global_step,
             },
@@ -390,6 +416,7 @@ def main():
                     "num_classes": num_classes,
                     "use_captions": args.use_captions,
                     "captions_file": args.captions_file,
+                    "loss": "ce_weighted" if stage == 0 else "ce",
                     "epoch": epoch,
                     "global_step": global_step,
                     "best_metric_key": best_metric_key,
@@ -414,6 +441,7 @@ def main():
             "num_classes": num_classes,
             "use_captions": args.use_captions,
             "captions_file": args.captions_file,
+            "loss": "ce_weighted" if stage == 0 else "ce",
             "global_step": global_step,
         },
         final_ckpt,
