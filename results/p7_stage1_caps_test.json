@@ -1,0 +1,7 @@
+{
+  "binary/accuracy": 0.6588,
+  "binary/macro_f1": 0.5647742459012245,
+  "binary/weighted_f1": 0.6263522139469802,
+  "binary/precision_macro": 0.6044852274646568,
+  "binary/recall_macro": 0.5701440640860085
+}

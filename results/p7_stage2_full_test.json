@@ -1,0 +1,59 @@
+{
+  "multiclass/accuracy": 0.7446808510638298,
+  "multiclass/macro_f1": 0.5902970988477784,
+  "multiclass/weighted_f1": 0.7414433289761557,
+  "multiclass/precision_macro": 0.6278851430157506,
+  "multiclass/recall_macro": 0.5862578508015434,
+  "multiclass/NotHate/f1": 0.8316498316498316,
+  "multiclass/NotHate/precision": 0.7787703625853915,
+  "multiclass/NotHate/recall": 0.8922335942203492,
+  "multiclass/Racist/f1": 0.5568281938325991,
+  "multiclass/Racist/precision": 0.48244274809160304,
+  "multiclass/Racist/recall": 0.6583333333333333,
+  "multiclass/Sexist/f1": 0.8170974155069582,
+  "multiclass/Sexist/precision": 0.86892177589852,
+  "multiclass/Sexist/recall": 0.7711069418386491,
+  "multiclass/Homophobe/f1": 0.11538461538461539,
+  "multiclass/Homophobe/precision": 0.10714285714285714,
+  "multiclass/Homophobe/recall": 0.125,
+  "multiclass/Religion/f1": 0.6305254378648875,
+  "multiclass/Religion/precision": 0.9021479713603818,
+  "multiclass/Religion/recall": 0.4846153846153846,
+  "multiclass/confusion_matrix": [
+    [
+      1482,
+      141,
+      15,
+      1,
+      22
+    ],
+    [
+      124,
+      316,
+      26,
+      5,
+      9
+    ],
+    [
+      62,
+      51,
+      411,
+      2,
+      7
+    ],
+    [
+      8,
+      9,
+      1,
+      3,
+      3
+    ],
+    [
+      227,
+      138,
+      20,
+      17,
+      378
+    ]
+  ]
+}

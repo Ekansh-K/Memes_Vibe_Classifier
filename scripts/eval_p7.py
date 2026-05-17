@@ -22,6 +22,39 @@ from src.utils.config import CHECKPOINTS_DIR, DataConfig, RESULTS_DIR
 from src.utils.text_vectorizer import TextVectorizer
 
 
+def load_caption_map(captions_file: str | None) -> dict[str, str]:
+    if not captions_file:
+        return {}
+    path = Path(captions_file)
+    if not path.exists():
+        raise FileNotFoundError(f"Captions file not found: {path}")
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    captions = {}
+    for tweet_id, value in raw.items():
+        if isinstance(value, dict):
+            caption = (value.get("caption", "") or "").strip()
+        elif isinstance(value, str):
+            caption = value.strip()
+        else:
+            caption = ""
+        if caption:
+            captions[str(tweet_id)] = caption
+
+    print(f"[P7-EVAL] Loaded captions for {len(captions)} samples from {path}")
+    return captions
+
+
+def compose_text(tweet_id: str, tweet_text: str, ocr_text: str, captions: dict[str, str], use_captions: bool) -> str:
+    parts = [(ocr_text or "").strip(), (tweet_text or "").strip()]
+    if use_captions:
+        caption = (captions.get(str(tweet_id), "") or "").strip()
+        if caption:
+            parts.append(caption)
+    return " ".join([p for p in parts if p]).strip()
+
+
 def target_for_stage(batch_item: dict, stage: int) -> int:
     if stage == 1:
         return int(batch_item["label_binary"])
@@ -31,14 +64,25 @@ def target_for_stage(batch_item: dict, stage: int) -> int:
 
 
 class StageCollator:
-    def __init__(self, vectorizer: TextVectorizer, max_len: int, stage: int):
+    def __init__(self, vectorizer: TextVectorizer, max_len: int, stage: int, captions: dict[str, str], use_captions: bool):
         self.vectorizer = vectorizer
         self.max_len = max_len
         self.stage = stage
+        self.captions = captions
+        self.use_captions = use_captions
 
     def __call__(self, batch):
         images = torch.stack([b["image"] for b in batch])
-        texts = [(b.get("ocr_text", "") or "") + " " + (b.get("tweet_text", "") or "") for b in batch]
+        texts = [
+            compose_text(
+                tweet_id=str(b.get("tweet_id", "")),
+                tweet_text=b.get("tweet_text", "") or "",
+                ocr_text=b.get("ocr_text", "") or "",
+                captions=self.captions,
+                use_captions=self.use_captions,
+            )
+            for b in batch
+        ]
         ids_batch, lengths = self.vectorizer.encode(texts, max_len=self.max_len)
         text_ids = torch.tensor(ids_batch, dtype=torch.long)
         lengths_t = torch.tensor(lengths, dtype=torch.long)
@@ -72,6 +116,8 @@ def main():
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--output", type=str, default=None, help="Optional JSON output path")
+    parser.add_argument("--use-captions", action="store_true", help="append VLM captions to text input")
+    parser.add_argument("--captions-file", type=str, default=None, help="JSON path mapping tweet_id -> caption or {caption: ...}")
     args = parser.parse_args()
 
     ckpt_path = Path(args.checkpoint)
@@ -82,6 +128,14 @@ def main():
     stage = int(ckpt.get("stage", 0))
     num_classes = int(ckpt.get("num_classes", 6))
     vocab = ckpt["vocab"]
+    ckpt_use_captions = bool(ckpt.get("use_captions", False))
+    ckpt_captions_file = ckpt.get("captions_file", None)
+
+    use_captions = bool(args.use_captions or ckpt_use_captions)
+    captions_file = args.captions_file or ckpt_captions_file
+    if use_captions and not captions_file:
+        raise ValueError("Caption mode enabled but no captions file available. Pass --captions-file.")
+    captions = load_caption_map(captions_file) if use_captions else {}
 
     vec = TextVectorizer(min_freq=1)
     vec.vocab = vocab
@@ -89,7 +143,7 @@ def main():
     cfg = DataConfig()
     ds_raw = MMHS150KDataset(split=args.split, config=cfg)
     ds = build_stage_subset(ds_raw, stage=stage, max_samples=args.max_samples)
-    collate = StageCollator(vectorizer=vec, max_len=args.max_len, stage=stage)
+    collate = StageCollator(vectorizer=vec, max_len=args.max_len, stage=stage, captions=captions, use_captions=use_captions)
 
     loader = DataLoader(
         ds,

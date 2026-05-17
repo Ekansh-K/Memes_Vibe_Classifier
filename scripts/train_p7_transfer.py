@@ -26,6 +26,39 @@ from src.utils.config import CHECKPOINTS_DIR, DataConfig
 from src.utils.text_vectorizer import TextVectorizer
 
 
+def load_caption_map(captions_file: str | None) -> dict[str, str]:
+    if not captions_file:
+        return {}
+    path = Path(captions_file)
+    if not path.exists():
+        raise FileNotFoundError(f"Captions file not found: {path}")
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    captions = {}
+    for tweet_id, value in raw.items():
+        if isinstance(value, dict):
+            caption = (value.get("caption", "") or "").strip()
+        elif isinstance(value, str):
+            caption = value.strip()
+        else:
+            caption = ""
+        if caption:
+            captions[str(tweet_id)] = caption
+
+    print(f"[TRANSFER] Loaded captions for {len(captions)} samples from {path}")
+    return captions
+
+
+def compose_text(tweet_id: str, tweet_text: str, ocr_text: str, captions: dict[str, str], use_captions: bool) -> str:
+    parts = [(ocr_text or "").strip(), (tweet_text or "").strip()]
+    if use_captions:
+        caption = (captions.get(str(tweet_id), "") or "").strip()
+        if caption:
+            parts.append(caption)
+    return " ".join([p for p in parts if p]).strip()
+
+
 def copy_encoder_weights(pre_ckpt, model):
     src_state = pre_ckpt["model_state_dict"]
     tgt_state = model.state_dict()
@@ -42,10 +75,19 @@ def copy_encoder_weights(pre_ckpt, model):
     print(f"[TRANSFER] Copied {copied} param tensors from pretrained checkpoint")
 
 
-def collate_batch(batch, vectorizer, max_len, stage):
+def collate_batch(batch, vectorizer, max_len, stage, captions: dict[str, str], use_captions: bool):
     import torch
     images = torch.stack([b["image"] for b in batch])
-    texts = [(b.get("ocr_text", "") or "") + " " + (b.get("tweet_text", "") or "") for b in batch]
+    texts = [
+        compose_text(
+            tweet_id=str(b.get("tweet_id", "")),
+            tweet_text=b.get("tweet_text", "") or "",
+            ocr_text=b.get("ocr_text", "") or "",
+            captions=captions,
+            use_captions=use_captions,
+        )
+        for b in batch
+    ]
     ids_batch, lengths = vectorizer.encode(texts, max_len=max_len)
     text_ids = torch.tensor(ids_batch, dtype=torch.long)
     lengths_t = torch.tensor(lengths, dtype=torch.long)
@@ -54,13 +96,15 @@ def collate_batch(batch, vectorizer, max_len, stage):
 
 
 class StageCollator:
-    def __init__(self, vectorizer, max_len, stage):
+    def __init__(self, vectorizer, max_len, stage, captions: dict[str, str], use_captions: bool):
         self.vectorizer = vectorizer
         self.max_len = max_len
         self.stage = stage
+        self.captions = captions
+        self.use_captions = use_captions
 
     def __call__(self, batch):
-        return collate_batch(batch, self.vectorizer, self.max_len, self.stage)
+        return collate_batch(batch, self.vectorizer, self.max_len, self.stage, self.captions, self.use_captions)
 
 
 def evaluate_model(model, loader, device, stage: int):
@@ -95,8 +139,14 @@ def main():
     parser.add_argument("--stage", type=int, choices=[1,2], default=2)
     parser.add_argument("--patience", type=int, default=5, help="early stopping patience (epochs without improvement)")
     parser.add_argument("--early-stop", action="store_true", help="enable early stopping based on validation metric")
+    parser.add_argument("--use-captions", action="store_true", help="append VLM captions to text input")
+    parser.add_argument("--captions-file", type=str, default=None, help="JSON path mapping tweet_id -> caption or {caption: ...}")
     parser.add_argument("--run-name", type=str, default="p7_transfer")
     args = parser.parse_args()
+
+    if args.use_captions and not args.captions_file:
+        raise ValueError("--use-captions requires --captions-file")
+    captions = load_caption_map(args.captions_file) if args.use_captions else {}
 
     # Load pretrained checkpoint
     pre_ckpt = torch.load(args.pretrained, map_location="cpu")
@@ -126,7 +176,13 @@ def main():
     train_ds = build_stage_subset_local(ds_train, args.stage)
     val_ds = build_stage_subset_local(ds_val, args.stage)
 
-    collate = StageCollator(vectorizer=vec, max_len=args.max_len, stage=args.stage)
+    collate = StageCollator(
+        vectorizer=vec,
+        max_len=args.max_len,
+        stage=args.stage,
+        captions=captions,
+        use_captions=args.use_captions,
+    )
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=collate, num_workers=args.num_workers)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, collate_fn=collate, num_workers=args.num_workers)
 
@@ -151,7 +207,10 @@ def main():
             writer = csv.writer(f)
             writer.writerow(["epoch", "step", "train_loss", "metric_key", "metric_value"])
 
-    print(f"[TRANSFER] Training start: device={device}, epochs={args.epochs}, stage={args.stage}, early_stop={args.early_stop}, patience={args.patience}")
+    print(
+        f"[TRANSFER] Training start: device={device}, epochs={args.epochs}, stage={args.stage}, "
+        f"early_stop={args.early_stop}, patience={args.patience}, use_captions={args.use_captions}"
+    )
     global_step = 0
     best_metric_key = "binary/macro_f1" if args.stage == 1 else "multiclass/macro_f1"
     best_metric = -1.0
@@ -201,6 +260,8 @@ def main():
             "vocab": vec.vocab,
             "stage": args.stage,
             "num_classes": num_classes,
+            "use_captions": args.use_captions,
+            "captions_file": args.captions_file,
             "epoch": epoch,
             "global_step": global_step,
         }, epoch_ckpt)
@@ -215,6 +276,8 @@ def main():
                 "vocab": vec.vocab,
                 "stage": args.stage,
                 "num_classes": num_classes,
+                "use_captions": args.use_captions,
+                "captions_file": args.captions_file,
                 "epoch": epoch,
                 "global_step": global_step,
                 "best_metric_key": best_metric_key,
@@ -234,6 +297,8 @@ def main():
         "vocab": vec.vocab,
         "stage": args.stage,
         "num_classes": num_classes,
+        "use_captions": args.use_captions,
+        "captions_file": args.captions_file,
         "global_step": global_step,
     }, final_ckpt)
     print(f"[TRANSFER] Final checkpoint -> {final_ckpt}")

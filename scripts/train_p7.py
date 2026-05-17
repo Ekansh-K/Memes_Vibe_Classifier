@@ -36,10 +36,44 @@ from src.utils.config import CHECKPOINTS_DIR, DataConfig
 from src.utils.text_vectorizer import TextVectorizer
 
 
-def build_texts_for_vocab(max_ids=None):
+def load_caption_map(captions_file: str | None) -> dict[str, str]:
+    if not captions_file:
+        return {}
+    path = Path(captions_file)
+    if not path.exists():
+        raise FileNotFoundError(f"Captions file not found: {path}")
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    captions = {}
+    for tweet_id, value in raw.items():
+        if isinstance(value, dict):
+            caption = (value.get("caption", "") or "").strip()
+        elif isinstance(value, str):
+            caption = value.strip()
+        else:
+            caption = ""
+        if caption:
+            captions[str(tweet_id)] = caption
+
+    print(f"[P7] Loaded captions for {len(captions)} samples from {path}")
+    return captions
+
+
+def compose_text(tweet_id: str, tweet_text: str, ocr_text: str, captions: dict[str, str], use_captions: bool) -> str:
+    parts = [(ocr_text or "").strip(), (tweet_text or "").strip()]
+    if use_captions:
+        caption = (captions.get(str(tweet_id), "") or "").strip()
+        if caption:
+            parts.append(caption)
+    return " ".join([p for p in parts if p]).strip()
+
+
+def build_texts_for_vocab(max_ids=None, captions: dict[str, str] | None = None, use_captions: bool = False):
     gt = load_gt_json()
     ocr = load_ocr_data()
     ids = list(load_split_ids("train"))
+    captions = captions or {}
     if max_ids:
         ids = ids[:max_ids]
     texts = []
@@ -47,7 +81,7 @@ def build_texts_for_vocab(max_ids=None):
         entry = gt.get(tid, {})
         t = entry.get("tweet_text", "") or ""
         o = ocr.get(tid, "") or ""
-        texts.append((o + " " + t).strip())
+        texts.append(compose_text(tid, t, o, captions=captions, use_captions=use_captions))
     return texts
 
 
@@ -62,9 +96,18 @@ def target_for_stage(batch_item: dict, stage: int) -> int:
     return int(batch_item["label"])
 
 
-def collate_batch(batch, vectorizer: TextVectorizer, max_len: int, stage: int):
+def collate_batch(batch, vectorizer: TextVectorizer, max_len: int, stage: int, captions: dict[str, str], use_captions: bool):
     images = torch.stack([b["image"] for b in batch])
-    texts = [(b.get("ocr_text", "") or "") + " " + (b.get("tweet_text", "") or "") for b in batch]
+    texts = [
+        compose_text(
+            tweet_id=str(b.get("tweet_id", "")),
+            tweet_text=b.get("tweet_text", "") or "",
+            ocr_text=b.get("ocr_text", "") or "",
+            captions=captions,
+            use_captions=use_captions,
+        )
+        for b in batch
+    ]
     ids_batch, lengths = vectorizer.encode(texts, max_len=max_len)
     text_ids = torch.tensor(ids_batch, dtype=torch.long)
     lengths_t = torch.tensor(lengths, dtype=torch.long)
@@ -75,13 +118,15 @@ def collate_batch(batch, vectorizer: TextVectorizer, max_len: int, stage: int):
 class StageCollator:
     """Pickle-safe callable collator for Windows multiprocessing."""
 
-    def __init__(self, vectorizer: TextVectorizer, max_len: int, stage: int):
+    def __init__(self, vectorizer: TextVectorizer, max_len: int, stage: int, captions: dict[str, str], use_captions: bool):
         self.vectorizer = vectorizer
         self.max_len = max_len
         self.stage = stage
+        self.captions = captions
+        self.use_captions = use_captions
 
     def __call__(self, batch):
-        return collate_batch(batch, self.vectorizer, self.max_len, self.stage)
+        return collate_batch(batch, self.vectorizer, self.max_len, self.stage, self.captions, self.use_captions)
 
 
 def build_stage_subset(dataset: MMHS150KDataset, stage: int, max_samples=None):
@@ -169,13 +214,22 @@ def main():
     parser.add_argument("--run-name", type=str, default="p7_run")
     parser.add_argument("--wandb", action="store_true", help="enable Weights & Biases logging")
     parser.add_argument("--wandb-project", type=str, default="mmhs150k-hate-speech")
+    parser.add_argument("--patience", type=int, default=5, help="early stopping patience (epochs without improvement)")
+    parser.add_argument("--early-stop", action="store_true", help="enable early stopping based on validation metric")
+    parser.add_argument("--use-captions", action="store_true", help="append VLM captions to text input")
+    parser.add_argument("--captions-file", type=str, default=None, help="JSON path mapping tweet_id -> caption or {caption: ...}")
     args = parser.parse_args()
+
+    if args.use_captions and not args.captions_file:
+        raise ValueError("--use-captions requires --captions-file")
+
+    captions = load_caption_map(args.captions_file) if args.use_captions else {}
 
     cfg = DataConfig()
     stage = int(args.stage)
 
     print("[P7] Building vocab from train split...")
-    texts = build_texts_for_vocab(max_ids=args.max_samples)
+    texts = build_texts_for_vocab(max_ids=args.max_samples, captions=captions, use_captions=args.use_captions)
     vectorizer = TextVectorizer(min_freq=1)
     vectorizer.fit(texts)
     print(f"[P7] Vocab size: {vectorizer.vocab_size}")
@@ -187,7 +241,13 @@ def main():
     train_ds = build_stage_subset(train_ds_raw, stage=stage, max_samples=args.max_samples)
     val_ds = build_stage_subset(val_ds_raw, stage=stage, max_samples=None)
 
-    collate = StageCollator(vectorizer=vectorizer, max_len=args.max_len, stage=stage)
+    collate = StageCollator(
+        vectorizer=vectorizer,
+        max_len=args.max_len,
+        stage=stage,
+        captions=captions,
+        use_captions=args.use_captions,
+    )
     train_loader = DataLoader(
         train_ds,
         batch_size=args.batch_size,
@@ -232,14 +292,21 @@ def main():
         "max_len": args.max_len,
         "stage": stage,
         "num_classes": num_classes,
+        "use_captions": args.use_captions,
+        "captions_file": args.captions_file,
     }
     wandb_run = maybe_init_wandb(args, cfg_for_log)
 
-    print(f"[P7] Training start: device={device}, epochs={args.epochs}, stage={stage}")
+    print(
+        f"[P7] Training start: device={device}, epochs={args.epochs}, stage={stage}, "
+        f"early_stop={args.early_stop}, patience={args.patience}"
+    )
 
     global_step = 0
     best_metric_key = "binary/macro_f1" if stage == 1 else "multiclass/macro_f1"
     best_metric = -1.0
+    epochs_no_improve = 0
+    patience = int(args.patience)
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -270,6 +337,8 @@ def main():
                         "vocab": vectorizer.vocab,
                         "stage": stage,
                         "num_classes": num_classes,
+                        "use_captions": args.use_captions,
+                        "captions_file": args.captions_file,
                         "global_step": global_step,
                     },
                     step_ckpt,
@@ -300,6 +369,8 @@ def main():
                 "vocab": vectorizer.vocab,
                 "stage": stage,
                 "num_classes": num_classes,
+                "use_captions": args.use_captions,
+                "captions_file": args.captions_file,
                 "epoch": epoch,
                 "global_step": global_step,
             },
@@ -309,6 +380,7 @@ def main():
         current = float(val_metrics.get(best_metric_key, -1.0))
         if current > best_metric:
             best_metric = current
+            epochs_no_improve = 0
             best_ckpt = run_dir / "best.pt"
             torch.save(
                 {
@@ -316,6 +388,8 @@ def main():
                     "vocab": vectorizer.vocab,
                     "stage": stage,
                     "num_classes": num_classes,
+                    "use_captions": args.use_captions,
+                    "captions_file": args.captions_file,
                     "epoch": epoch,
                     "global_step": global_step,
                     "best_metric_key": best_metric_key,
@@ -324,6 +398,12 @@ def main():
                 best_ckpt,
             )
             print(f"[P7] New best checkpoint -> {best_ckpt} ({best_metric_key}={best_metric:.4f})")
+        else:
+            epochs_no_improve += 1
+            print(f"[P7] No improvement for {epochs_no_improve} epoch(s)")
+            if args.early_stop and epochs_no_improve >= patience:
+                print(f"[P7] Early stopping triggered (no improvement in {patience} epochs).")
+                break
 
     final_ckpt = run_dir / args.checkpoint_name
     torch.save(
@@ -332,6 +412,8 @@ def main():
             "vocab": vectorizer.vocab,
             "stage": stage,
             "num_classes": num_classes,
+            "use_captions": args.use_captions,
+            "captions_file": args.captions_file,
             "global_step": global_step,
         },
         final_ckpt,
