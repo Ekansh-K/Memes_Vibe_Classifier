@@ -1,0 +1,13 @@
+{
+  "multilabel/micro_f1": 0.6012196935891715,
+  "multilabel/macro_f1": 0.42411569035229457,
+  "multilabel/sample_f1": 0.5656507571401188,
+  "multilabel/hamming_loss": 0.15416906267970099,
+  "multilabel/jaccard": 0.5579355951696378,
+  "multilabel/exact_match": 0.5373778033352501,
+  "multilabel/class_0/f1": 0.7242524916943521,
+  "multilabel/class_1/f1": 0.4967989756722151,
+  "multilabel/class_2/f1": 0.44831591173054586,
+  "multilabel/class_3/f1": 0.0,
+  "multilabel/class_4/f1": 0.45121107266435984
+}

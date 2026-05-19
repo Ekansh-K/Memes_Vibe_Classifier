@@ -30,6 +30,10 @@ tqdm
 matplotlib
 seaborn
 
+# P8 (RGCL) dependencies
+faiss-cpu
+git+https://github.com/openai/CLIP.git
+
 # Config
 PyYAML
 

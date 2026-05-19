@@ -12,6 +12,8 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    hamming_loss,
+    jaccard_score,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -110,6 +112,38 @@ def compute_multiclass_metrics(
     # Confusion matrix as nested list
     cm = confusion_matrix(y_true, y_pred)
     metrics["multiclass/confusion_matrix"] = cm.tolist()
+
+    return metrics
+
+
+def compute_multilabel_metrics(
+    y_true: list | np.ndarray,
+    y_pred: list | np.ndarray,
+) -> dict:
+    """Compute multilabel classification metrics.
+
+    Args:
+        y_true: Ground truth multi-hot labels (N, C).
+        y_pred: Predicted multi-hot labels (N, C).
+
+    Returns:
+        Dict with overall and per-class metrics.
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+
+    metrics = {
+        "multilabel/micro_f1": float(f1_score(y_true, y_pred, average="micro", zero_division=0)),
+        "multilabel/macro_f1": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
+        "multilabel/sample_f1": float(f1_score(y_true, y_pred, average="samples", zero_division=0)),
+        "multilabel/hamming_loss": float(hamming_loss(y_true, y_pred)),
+        "multilabel/jaccard": float(jaccard_score(y_true, y_pred, average="samples", zero_division=0)),
+        "multilabel/exact_match": float(accuracy_score(y_true, y_pred)),
+    }
+
+    per_class_f1 = f1_score(y_true, y_pred, average=None, zero_division=0)
+    for i, f1 in enumerate(per_class_f1):
+        metrics[f"multilabel/class_{i}/f1"] = float(f1)
 
     return metrics
 
