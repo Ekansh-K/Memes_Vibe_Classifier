@@ -93,7 +93,6 @@ class TemperatureScaler(nn.Module):
     def forward(self, logits: torch.Tensor) -> torch.Tensor:
         return logits / self.temperature
 
-    @torch.no_grad()
     def fit(self, logits: torch.Tensor, labels: torch.Tensor, lr: float = 0.01, max_iter: int = 200):
         """Fit temperature on validation logits using NLL loss.
 
