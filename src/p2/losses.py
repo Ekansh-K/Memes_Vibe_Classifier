@@ -99,11 +99,16 @@ class TemperatureScaler(nn.Module):
         """Fit temperature on validation logits using NLL loss.
 
         Args:
-            logits: (N,) raw validation logits
+            logits: (N,) raw validation logits (any device — will be moved)
             labels: (N,) binary labels (hard, 0 or 1)
             lr:     learning rate for LBFGS
             max_iter: maximum LBFGS iterations
         """
+        # Align inputs to the same device as self.temperature
+        dev = self.temperature.device
+        logits = logits.detach().to(dev)
+        labels = labels.detach().to(dev)
+
         self.temperature.requires_grad_(True)
         criterion = nn.BCEWithLogitsLoss()
         optimizer = torch.optim.LBFGS([self.temperature], lr=lr, max_iter=max_iter)

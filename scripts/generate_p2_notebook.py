@@ -61,8 +61,8 @@ MAX_TRAIN_SAMPLES = None   # e.g. 1000 for a quick smoke test
 MAX_VAL_SAMPLES   = None
 
 # ── STAGE 1 HYPERPARAMETERS ──────────────────────────────────────────────────
-S1_EPOCHS     = 4          # Peak observed at epoch 2 in Phase 2 run; 4 epochs captures it with margin
-S1_LR         = 1e-4       # reduced 2e-4 → 1e-4: head converges but needs finer settling
+S1_EPOCHS     = 10         # Loss still trending down at epoch 4 with no overfitting; 10 gives headroom
+S1_LR         = 1e-4       # Keep at 1e-4; train loss still decreasing steadily
 S1_BATCH_SIZE = 128        # single T4 has 15GB, only 2.8GB used at bs=32 → safe to 4×
 S1_WARMUP     = 0.05       # 5% of total steps
 
@@ -87,8 +87,8 @@ USE_DATA_PARALLEL = False   # CLIP ViT-L/14 is too large for clean DataParallel 
 # ── LABEL DENOISING (Options A/B/C from ceiling analysis) ──────────────────────
 SOFT_LABELS         = True       # Option A: use annotator vote probabilities as targets
 AGREEMENT_WEIGHTING = True       # Option B: weight loss by annotator agreement level
-AGREEMENT_WEIGHTS   = (0.2, 0.5, 1.0)   # (all_differ, majority, unanimous)
-LABEL_SMOOTHING     = 0.1        # Option C: push hard targets toward 0.5 by 10%
+AGREEMENT_WEIGHTS   = (0.4, 0.7, 1.0)   # relaxed from (0.2,0.5,1.0) — 0.2 starved too much signal
+LABEL_SMOOTHING     = 0.0        # 0 when soft labels on — soft targets already smooth the signal
 TEMP_SCALING        = True       # post-training temperature calibration
 
 # ── STORAGE ─────────────────────────────────────────────────────────────────

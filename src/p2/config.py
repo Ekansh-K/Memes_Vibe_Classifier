@@ -42,7 +42,7 @@ class P2Config:
     max_text_len: int = 128       # TweetEval tokenizer max length
 
     # ── Stage 1 training ────────────────────────────────────────────────────
-    s1_epochs: int = 5
+    s1_epochs: int = 10
     s1_lr: float = 2e-4
     s1_batch_size: int = 16       # T4-safe (effective batch = 16 × 8 = 128)
     s1_warmup_ratio: float = 0.05
@@ -60,12 +60,12 @@ class P2Config:
     scheduler: str = "cosine"
     use_amp: bool = True          # fp16
     early_stop_patience: int = 5  # epochs without val improvement → stop
-    label_smoothing: float = 0.1  # Option C: soften hard targets (0→0.05, 1→0.95)
+    label_smoothing: float = 0.0  # Option C: 0 when soft labels active (they already smooth)
 
     # ── Soft labels & agreement weighting (Options A & B) ────────────────────
     use_soft_labels: bool = True       # Option A: use annotator vote probabilities
     use_agreement_weighting: bool = True  # Option B: weight loss by agreement level
-    agreement_weights: tuple = (0.2, 0.5, 1.0)  # weights for levels 1, 2, 3
+    agreement_weights: tuple = (0.4, 0.7, 1.0)  # weights for levels 1, 2, 3 (relaxed from 0.2,0.5)
     temperature_scaling: bool = True   # learn calibration temperature on val set
 
     # ── Hardware ────────────────────────────────────────────────────────────
