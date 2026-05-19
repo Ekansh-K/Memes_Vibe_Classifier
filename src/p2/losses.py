@@ -71,8 +71,10 @@ class SoftBCEWithAgreementWeighting(nn.Module):
 
         # Option B: agreement-based per-sample weighting
         if self.use_agreement_weighting and agreement_levels is not None:
-            # Map agreement levels (1,2,3) to weights via index (0,1,2)
-            w = self._aw[agreement_levels - 1]  # (B,)
+            # Map agreement levels (1,2,3) to weights via index (0,1,2).
+            # Ensure same device — _aw follows the module, agreement_levels follows the batch.
+            w = self._aw[(agreement_levels - 1).to(self._aw.device)]  # (B,)
+            w = w.to(per_sample.device)  # move weight to loss device for multiply
             # Weighted mean (normalize by sum of weights for stable gradients)
             return (per_sample * w).sum() / w.sum().clamp(min=1.0)
 

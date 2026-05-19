@@ -369,6 +369,10 @@ def train_stage(
         label_smoothing=config.label_smoothing,
         config=config,
     )
+    # Move criterion to device — ensures registered buffers (e.g. _aw in
+    # SoftBCEWithAgreementWeighting) land on the same device as the model.
+    if hasattr(criterion, "to"):
+        criterion = criterion.to(device)
 
     # ── Optimizer with differential learning rates ────────────────────────
     # Head/proj_t/cross_attn: full LR
