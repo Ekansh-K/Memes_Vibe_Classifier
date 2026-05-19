@@ -9,7 +9,8 @@ dataset.zip
 *.whl
 
 # Output & Logs
-checkpoints/
+checkpoints copy/
+*.pt
 vlm_eval/
 *.log
 
