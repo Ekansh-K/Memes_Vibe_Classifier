@@ -104,11 +104,12 @@ def _preprocess_images_for_trainer(
     return torch.stack(tensors).to(device)
 
 
-def _get_targets(batch: dict, variation: str, stage: int) -> torch.Tensor:
+def _get_targets(batch: dict, variation: str, stage: int, config=None) -> torch.Tensor:
     """Extract the correct target tensor for a batch.
 
     Label map:
-        P2-A, Stage 1 of C/D  → label_binary (float, 0.0 or 1.0)
+        P2-A, Stage 1 of C/D  → soft_label P(hate)  [if use_soft_labels]
+                                   OR label_binary (hard 0/1)
         P2-B                  → label_6class  (long, 0–5)
         P2-C Stage 2          → label_s2      (long, 0–4 hate categories)
         P2-D Stage 2          → multi_label_binary[:, 1:] (float, 5 hate cols)
@@ -122,6 +123,13 @@ def _get_targets(batch: dict, variation: str, stage: int) -> torch.Tensor:
         else:
             return batch["label_s2"]
     # Default: binary (P2-A, Stage 1 of C/D)
+    # Option A: use soft labels (annotator vote probability for hate class)
+    use_soft = getattr(config, "use_soft_labels", False) if config else False
+    if use_soft:
+        # soft_label is (B, 6) — column index 0=NotHate, 1-5=hate categories
+        # soft_label_binary P(hate) = sum of columns 1-5 = 1 - column 0
+        soft_6 = batch["soft_label"]  # (B, 6)
+        return (1.0 - soft_6[:, 0]).float()  # P(hate) in [0, 0.333, 0.667, 1.0]
     return batch["label_binary"].float()
 
 
@@ -165,7 +173,7 @@ def _train_epoch(
     for step, batch in enumerate(loader):
         pil_images = batch["image"]       # list of PIL images
         texts      = batch["text"]         # list of strings
-        targets    = _get_targets(batch, variation, stage).to(device)
+        targets    = _get_targets(batch, variation, stage, config=config).to(device)
 
         # Preprocess images to tensor BEFORE model forward so DataParallel
         # can scatter the tensor across GPUs (lists are not scatter-able).
@@ -177,7 +185,12 @@ def _train_epoch(
         # Compute loss in FP32 for numerical stability
         logits_f32 = logits.float()
         if variation == "A" or (variation in ("C", "D") and stage == 1):
-            loss = criterion(logits_f32.squeeze(-1), targets)
+            # SoftBCEWithAgreementWeighting accepts agreement_levels kwarg
+            agree_lvl = batch["agreement_level"].to(device)
+            if hasattr(criterion, "use_agreement_weighting"):
+                loss = criterion(logits_f32.squeeze(-1), targets, agreement_levels=agree_lvl)
+            else:
+                loss = criterion(logits_f32.squeeze(-1), targets)
         else:
             loss = criterion(logits_f32, targets)
 
@@ -232,35 +245,50 @@ def _eval_epoch(
     stage: int,
     criterion: nn.Module,
     thresholds: Optional[np.ndarray] = None,
+    config=None,
 ) -> tuple[dict, np.ndarray, np.ndarray]:
-    """Evaluate one epoch; return (metrics_dict, all_logits, all_targets)."""
+    """Evaluate one epoch; return (metrics_dict, all_logits, all_targets).
+
+    Note: targets are always HARD labels for metric computation, even when
+    the training loss uses soft labels. Val loss uses the same loss function
+    as training (soft targets + agreement weighting) for consistency.
+    """
     model.eval()
-    all_logits, all_targets = [], []
+    all_logits, all_targets_hard = [], []
     total_val_loss = 0.0
     n_val_steps = 0
 
     for batch in loader:
         pil_images = batch["image"]
         texts      = batch["text"]
-        targets    = _get_targets(batch, variation, stage).to(device)
 
         # Same DataParallel fix as train: preprocess to tensor before forward
         images_tensor = _preprocess_images_for_trainer(pil_images, model, device)
         logits = model(images_tensor, texts)
-
         logits_f32 = logits.float()
+
         if variation == "A" or (variation in ("C", "D") and stage == 1):
-            loss = criterion(logits_f32.squeeze(-1), targets)
+            # Val loss: use same loss function as training for consistency
+            soft_targets = _get_targets(batch, variation, stage, config=config).to(device)
+            agree_lvl = batch["agreement_level"].to(device)
+            if hasattr(criterion, "use_agreement_weighting"):
+                loss = criterion(logits_f32.squeeze(-1), soft_targets, agreement_levels=agree_lvl)
+            else:
+                loss = criterion(logits_f32.squeeze(-1), soft_targets)
+            # For metrics: always use hard binary labels
+            hard_targets = batch["label_binary"].float().to(device)
         else:
-            loss = criterion(logits_f32, targets)
+            hard_targets = _get_targets(batch, variation, stage).to(device)
+            loss = criterion(logits_f32, hard_targets) if variation != "A" else criterion(logits_f32.squeeze(-1), hard_targets)
+
         total_val_loss += loss.item()
         n_val_steps += 1
 
         all_logits.append(logits.cpu())
-        all_targets.append(targets.cpu())
+        all_targets_hard.append(hard_targets.cpu())
 
     logits_arr = torch.cat(all_logits, dim=0).numpy()
-    targets_arr = torch.cat(all_targets, dim=0).numpy()
+    targets_arr = torch.cat(all_targets_hard, dim=0).numpy()
     metrics = {"val/loss": total_val_loss / max(n_val_steps, 1)}
 
     # ── Binary (P2-A, Stage 1 of C/D) ────────────────────────────────────
@@ -339,6 +367,7 @@ def train_stage(
         train_dataset=train_ds,
         device=device,
         label_smoothing=config.label_smoothing,
+        config=config,
     )
 
     # ── Optimizer with differential learning rates ────────────────────────
@@ -436,6 +465,7 @@ def train_stage(
         val_metrics, val_logits, val_targets = _eval_epoch(
             model, val_loader, device, variation, stage,
             criterion=criterion,
+            config=config,
         )
 
         # Stage 1 binary threshold calibration
@@ -467,12 +497,15 @@ def train_stage(
 
         if primary_val > best_metric:
             best_metric = primary_val
-            # Only save trainable params (proj_t, cross_attn, head)
+            # Save trainable params: head, proj_t, cross_attn + any unfrozen encoder layers
             best_state = {
                 k: v.clone() for k, v in _module.state_dict().items()
                 if any(
                     k.startswith(prefix)
-                    for prefix in ["proj_t.", "cross_attn.", "head."]
+                    for prefix in ["proj_t.", "cross_attn.", "head.", "tweet_encoder."]
+                ) and any(  # only save if parameter is actually trainable
+                    k.startswith(n) for n, p in _module.named_parameters()
+                    if p.requires_grad
                 )
             }
             save_dir.mkdir(parents=True, exist_ok=True)
@@ -503,7 +536,43 @@ def train_stage(
     if best_state is not None:
         _module.load_state_dict(best_state, strict=False)
 
-    return _module, {"best": best_metric, "history": history}, val_logits, val_targets
+    # ── Temperature scaling (post-training calibration) ────────────────────
+    temp_value = None
+    if getattr(config, "temperature_scaling", False) and primary_key == "binary/macro_f1":
+        from src.p2.losses import TemperatureScaler
+        temp_scaler = TemperatureScaler().to(device)
+        # Recompute val logits with restored best weights
+        _module.eval()
+        all_val_logits, all_val_hard = [], []
+        with torch.no_grad():
+            for batch in val_loader:
+                pil_images = batch["image"]
+                texts = batch["text"]
+                images_tensor = _preprocess_images_for_trainer(pil_images, _module, device)
+                logits = _module(images_tensor, texts)
+                all_val_logits.append(logits.squeeze(-1).cpu())
+                all_val_hard.append(batch["label_binary"].float())
+        val_logits_t = torch.cat(all_val_logits)
+        val_hard_t = torch.cat(all_val_hard)
+        temp_value = temp_scaler.fit(val_logits_t, val_hard_t)
+        # Recalibrate with temperature-scaled logits
+        scaled_logits = val_logits_t / temp_value
+        scaled_probs = torch.sigmoid(scaled_logits).numpy()
+        best_t_new, best_f1_new = 0.5, 0.0
+        for _t in np.arange(0.10, 0.91, 0.01):
+            _preds = (scaled_probs >= _t).astype(int)
+            _f1 = float(sklearn_f1_score(
+                val_hard_t.numpy().astype(int), _preds,
+                average="macro", zero_division=0
+            ))
+            if _f1 > best_f1_new:
+                best_f1_new, best_t_new = _f1, float(_t)
+        logger.info(
+            f"[TempScale] Post-calibration: T={temp_value:.4f}  "
+            f"threshold={best_t_new:.2f}  F1={best_f1_new:.4f}"
+        )
+
+    return _module, {"best": best_metric, "history": history, "temperature": temp_value}, val_logits, val_targets
 
 
 # ── Main P2 training entry point ─────────────────────────────────────────────

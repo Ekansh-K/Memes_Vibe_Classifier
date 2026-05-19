@@ -60,7 +60,13 @@ class P2Config:
     scheduler: str = "cosine"
     use_amp: bool = True          # fp16
     early_stop_patience: int = 5  # epochs without val improvement → stop
-    label_smoothing: float = 0.0
+    label_smoothing: float = 0.1  # Option C: soften hard targets (0→0.05, 1→0.95)
+
+    # ── Soft labels & agreement weighting (Options A & B) ────────────────────
+    use_soft_labels: bool = True       # Option A: use annotator vote probabilities
+    use_agreement_weighting: bool = True  # Option B: weight loss by agreement level
+    agreement_weights: tuple = (0.2, 0.5, 1.0)  # weights for levels 1, 2, 3
+    temperature_scaling: bool = True   # learn calibration temperature on val set
 
     # ── Hardware ────────────────────────────────────────────────────────────
     device: str = "auto"          # "auto" → cuda if available, else cpu

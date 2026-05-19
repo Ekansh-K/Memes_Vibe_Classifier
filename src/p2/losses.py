@@ -21,6 +21,107 @@ import torch.nn as nn
 logger = logging.getLogger(__name__)
 
 
+class SoftBCEWithAgreementWeighting(nn.Module):
+    """BCEWithLogitsLoss that supports soft targets, agreement weighting,
+    and BCE-specific label smoothing (Options A + B + C combined).
+
+    For each sample i:
+        smoothed_target = target * (1 - label_smoothing) + 0.5 * label_smoothing
+        per_sample_loss = BCE(logit, smoothed_target) * agreement_weight[agreement_level]
+        loss = weighted_mean(per_sample_loss)
+    """
+
+    def __init__(
+        self,
+        pos_weight: torch.Tensor,
+        agreement_weights: tuple = (0.2, 0.5, 1.0),
+        use_agreement_weighting: bool = True,
+        label_smoothing: float = 0.0,
+    ):
+        super().__init__()
+        # reduction='none' for per-sample weighting
+        self.bce = nn.BCEWithLogitsLoss(pos_weight=pos_weight, reduction="none")
+        self.use_agreement_weighting = use_agreement_weighting
+        # agreement_weights: index 0 = level 1 (all differ), 1 = level 2, 2 = level 3
+        self.register_buffer(
+            "_aw",
+            torch.tensor([agreement_weights[0], agreement_weights[1], agreement_weights[2]],
+                         dtype=torch.float32),
+        )
+        self.label_smoothing = label_smoothing
+
+    def forward(
+        self,
+        logits: torch.Tensor,
+        targets: torch.Tensor,
+        agreement_levels: torch.Tensor = None,
+    ) -> torch.Tensor:
+        """Compute weighted soft-BCE loss.
+
+        Args:
+            logits:           (B,) raw logit scores
+            targets:          (B,) soft targets in [0, 1] (annotator vote probs)
+            agreement_levels: (B,) int tensor with values 1, 2, or 3
+        """
+        # Option C: BCE label smoothing — push targets toward 0.5
+        if self.label_smoothing > 0:
+            targets = targets * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
+
+        per_sample = self.bce(logits, targets)  # (B,)
+
+        # Option B: agreement-based per-sample weighting
+        if self.use_agreement_weighting and agreement_levels is not None:
+            # Map agreement levels (1,2,3) to weights via index (0,1,2)
+            w = self._aw[agreement_levels - 1]  # (B,)
+            # Weighted mean (normalize by sum of weights for stable gradients)
+            return (per_sample * w).sum() / w.sum().clamp(min=1.0)
+
+        return per_sample.mean()
+
+
+class TemperatureScaler(nn.Module):
+    """Learn a single temperature parameter to calibrate output probabilities.
+
+    After training, divide logits by learned temperature before sigmoid.
+    This stabilizes the threshold and calibrates the output distribution.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.temperature = nn.Parameter(torch.ones(1))
+
+    def forward(self, logits: torch.Tensor) -> torch.Tensor:
+        return logits / self.temperature
+
+    @torch.no_grad()
+    def fit(self, logits: torch.Tensor, labels: torch.Tensor, lr: float = 0.01, max_iter: int = 200):
+        """Fit temperature on validation logits using NLL loss.
+
+        Args:
+            logits: (N,) raw validation logits
+            labels: (N,) binary labels (hard, 0 or 1)
+            lr:     learning rate for LBFGS
+            max_iter: maximum LBFGS iterations
+        """
+        self.temperature.requires_grad_(True)
+        criterion = nn.BCEWithLogitsLoss()
+        optimizer = torch.optim.LBFGS([self.temperature], lr=lr, max_iter=max_iter)
+
+        def closure():
+            optimizer.zero_grad()
+            scaled = logits / self.temperature
+            loss = criterion(scaled, labels.float())
+            loss.backward()
+            return loss
+
+        optimizer.step(closure)
+        self.temperature.requires_grad_(False)
+        logger.info(
+            f"[TempScale] Learned temperature = {self.temperature.item():.4f}"
+        )
+        return self.temperature.item()
+
+
 def compute_binary_pos_weight(labels: list[int], device: torch.device) -> torch.Tensor:
     """Compute pos_weight for BCEWithLogitsLoss (binary).
 
@@ -102,6 +203,7 @@ def get_p2_loss(
     train_dataset,
     device: torch.device,
     label_smoothing: float = 0.0,
+    config=None,
 ):
     """Return the appropriate loss function for the given P2 variant and stage.
 
@@ -111,6 +213,7 @@ def get_p2_loss(
         train_dataset:  P2Dataset instance for the training split.
         device:         Target device.
         label_smoothing: Amount of label smoothing.
+        config:         P2Config (needed for soft labels / agreement weighting).
 
     Returns:
         Instantiated loss nn.Module.
@@ -127,6 +230,26 @@ def get_p2_loss(
     # ── P2-A or Stage 1 of C/D ────────────────────────────────────────────
     if variation == "A" or (variation in ("C", "D") and stage == 1):
         pw = compute_binary_pos_weight(labels_binary, device)
+
+        # Use soft labels + agreement weighting if config enables them
+        use_soft = getattr(config, "use_soft_labels", False)
+        use_agree = getattr(config, "use_agreement_weighting", False)
+        ls = label_smoothing if label_smoothing > 0 else 0.0
+
+        if use_soft or use_agree or ls > 0:
+            agree_w = getattr(config, "agreement_weights", (0.2, 0.5, 1.0))
+            logger.info(
+                f"[P2 Loss] Stage 1: soft_labels={use_soft}  "
+                f"agreement_weighting={use_agree} ({agree_w})  "
+                f"label_smoothing={ls}"
+            )
+            return SoftBCEWithAgreementWeighting(
+                pos_weight=pw,
+                agreement_weights=agree_w,
+                use_agreement_weighting=use_agree,
+                label_smoothing=ls,
+            )
+
         return nn.BCEWithLogitsLoss(pos_weight=pw)
 
     # ── P2-B — direct 6-class ─────────────────────────────────────────────

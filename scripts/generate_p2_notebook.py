@@ -61,7 +61,7 @@ MAX_TRAIN_SAMPLES = None   # e.g. 1000 for a quick smoke test
 MAX_VAL_SAMPLES   = None
 
 # ── STAGE 1 HYPERPARAMETERS ──────────────────────────────────────────────────
-S1_EPOCHS     = 8          # 8 for unfrozen Phase 2 run (unfrozen layers need more steps)
+S1_EPOCHS     = 4          # Peak observed at epoch 2 in Phase 2 run; 4 epochs captures it with margin
 S1_LR         = 1e-4       # reduced 2e-4 → 1e-4: head converges but needs finer settling
 S1_BATCH_SIZE = 128        # single T4 has 15GB, only 2.8GB used at bs=32 → safe to 4×
 S1_WARMUP     = 0.05       # 5% of total steps
@@ -84,6 +84,13 @@ SEED          = 42
 USE_AMP       = True       # fp16 mixed precision
 USE_DATA_PARALLEL = False   # CLIP ViT-L/14 is too large for clean DataParallel replication
 
+# ── LABEL DENOISING (Options A/B/C from ceiling analysis) ──────────────────────
+SOFT_LABELS         = True       # Option A: use annotator vote probabilities as targets
+AGREEMENT_WEIGHTING = True       # Option B: weight loss by annotator agreement level
+AGREEMENT_WEIGHTS   = (0.2, 0.5, 1.0)   # (all_differ, majority, unanimous)
+LABEL_SMOOTHING     = 0.1        # Option C: push hard targets toward 0.5 by 10%
+TEMP_SCALING        = True       # post-training temperature calibration
+
 # ── STORAGE ─────────────────────────────────────────────────────────────────
 # IMPORTANT: Keep USE_IMAGE_STORE = False on Kaggle.
 # Building a memmap of 150K images fills /kaggle/working (~20 GB limit).
@@ -95,6 +102,8 @@ print(f"Text mode : {TEXT_MODE}")
 print(f"Eff batch : {S1_BATCH_SIZE} x {GRAD_ACCUM} = {S1_BATCH_SIZE * GRAD_ACCUM}")
 print(f"Max train : {MAX_TRAIN_SAMPLES or 'full dataset'}")
 print(f"Unfreeze  : {UNFREEZE_TWEET_LAYERS} TweetEval layers ({'frozen baseline' if UNFREEZE_TWEET_LAYERS == 0 else 'Phase 2 fine-tuning'})")
+print(f"Soft labels: {SOFT_LABELS}  Agreement wt: {AGREEMENT_WEIGHTING}  Smoothing: {LABEL_SMOOTHING}")
+print(f"Temp scale : {TEMP_SCALING}")
 print(f"Image store: {'enabled' if USE_IMAGE_STORE else 'DISABLED (disk-only, Kaggle-safe)'}")"""))
 
 # ── Cell 2: GPU check ─────────────────────────────────────────────────────────
@@ -292,6 +301,11 @@ config = P2Config(
     max_train_samples      = MAX_TRAIN_SAMPLES,
     max_val_samples        = MAX_VAL_SAMPLES,
     unfreeze_tweet_last_n  = UNFREEZE_TWEET_LAYERS,
+    use_soft_labels        = SOFT_LABELS,
+    use_agreement_weighting = AGREEMENT_WEIGHTING,
+    agreement_weights      = AGREEMENT_WEIGHTS,
+    label_smoothing        = LABEL_SMOOTHING,
+    temperature_scaling    = TEMP_SCALING,
     device                 = "auto",
     num_workers            = 2,   # Kaggle safe default
 )
@@ -301,7 +315,9 @@ print(f"Checkpoint   : {config.run_dir}")
 print(f"Results      : {config.results_run_dir}")
 print(f"Image store  : {'enabled' if config.use_image_store else 'DISABLED (disk-only)'}")
 print(f"Eff batch    : {config.s1_batch_size} x {config.grad_accum_steps} = {config.s1_batch_size * config.grad_accum_steps}")
-print(f"Unfreeze     : {config.unfreeze_tweet_last_n} TweetEval layers  tweet_lr={config.tweet_encoder_lr:.0e}")"""))
+print(f"Unfreeze     : {config.unfreeze_tweet_last_n} TweetEval layers  tweet_lr={config.tweet_encoder_lr:.0e}")
+print(f"Soft labels  : {config.use_soft_labels}  Agreement wt: {config.use_agreement_weighting}  Smoothing: {config.label_smoothing}")
+print(f"Temp scaling : {config.temperature_scaling}")"""))
 
 # ── Cell 5c: Split verification ───────────────────────────────────────────────
 cells.append(md("## 📊 5c. Split Verification — Confirm 80/10/10 Balanced Splits"))
