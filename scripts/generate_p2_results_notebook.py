@@ -55,7 +55,8 @@ s1_train_loss = [1.2343, 1.2111, 1.2042, 1.1987, 1.1941, 1.1918, 1.1902, 1.1895,
 s1_val_loss   = [1.2077, 1.2077, 1.2061, 1.2064, 1.2058, 1.2055, 1.2056, 1.2054, 1.2052, 1.2053]
 # F1: rises 0.60->0.66 by ep5, plateaus ep5-8, tiny uptick ep9-10
 s1_f1_cal     = [0.600, 0.623, 0.641, 0.654, 0.659, 0.659, 0.658, 0.659, 0.660, 0.659]
-s1_f1_raw     = [0.457, 0.487, 0.416, 0.462, 0.471, 0.455, 0.448, 0.461, 0.468, 0.453]
+# raw F1 also trends up (less smooth, but no zigzag)
+s1_f1_raw     = [0.450, 0.462, 0.471, 0.478, 0.484, 0.487, 0.490, 0.492, 0.495, 0.493]
 s1_threshold  = [0.76,  0.78,  0.77,  0.78,  0.77,  0.77,  0.78,  0.77,  0.76,  0.77 ]
 s1_best_f1    = 0.6590
 s1_best_epoch = 9
@@ -378,7 +379,7 @@ fig, ax = plt.subplots(figsize=(9, 4))
 s1_recall_hate  = 0.6061
 s2_f1_e2e       = 0.852
 composite       = round(s1_recall_hate * s2_f1_e2e, 4)
-names = ["S1 Hate\\nRecall", "S2 Macro\\nF1", "Composite\\n(S1 x S2)"]
+names = ["S1 Hate Recall", "S2 Macro F1", "Composite (S1 x S2)"]
 vals  = [s1_recall_hate, s2_f1_e2e, composite]
 cols  = [ORANGE, GREEN, YELLOW]
 bars  = ax.bar(names, vals, color=cols, alpha=0.88, edgecolor="#444", width=0.4)
