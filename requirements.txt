@@ -1,8 +1,15 @@
 # Core ML
 torch>=2.1
 torchvision
-transformers>=4.40
+transformers>=4.45
 datasets
+accelerate
+peft
+# bitsandbytes  # optional QLoRA; install on Linux CUDA for --use_4bit VLM
+safetensors
+sentencepiece
+protobuf
+kaggle
 
 # Text preprocessing
 wordsegment

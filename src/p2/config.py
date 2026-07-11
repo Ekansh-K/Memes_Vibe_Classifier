@@ -73,8 +73,9 @@ class P2Config:
     use_data_parallel: bool = True  # nn.DataParallel across all visible GPUs
     num_workers: int = 4
 
-    # ── Partial fine-tuning (Phase 2) ───────────────────────────────────
-    unfreeze_tweet_last_n: int = 0      # 0=fully frozen; 2=unfreeze last 2 TweetEval layers
+    # ── Partial fine-tuning (Stage-1 upgrade: text is the main signal) ──
+    # Default: unfreeze last 4 TweetEval layers for Stage-1 gains on A6000 48GB.
+    unfreeze_tweet_last_n: int = 4      # 0=fully frozen; 4–6 recommended for Stage-1
     tweet_encoder_lr: float = 1e-5     # LR for unfrozen TweetEval layers (much lower than head)
     clip_encoder_lr: float = 1e-6      # LR for unfrozen CLIP layers (Phase 3b, last resort)
 

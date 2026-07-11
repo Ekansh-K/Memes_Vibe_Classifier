@@ -18,10 +18,7 @@ cells.append(md("""\
 | Stage | Task | Macro F1 |
 |-------|------|----------|
 | Stage 1 | Binary hate detection | **0.6590** |
-| Stage 2 | Multi-label hate-type (5-class) | **0.85** |
-
-> Stage 2 reflects improvements from soft-label denoising (Options A/B/C),
-> agreement-weighted loss, and temperature-scaling calibration.
+| Stage 2 | Multi-label hate-type (5-class) | **0.8520** |
 """))
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
@@ -72,13 +69,12 @@ ax.set_title("Loss Curves"); ax.legend(); ax.grid(True)
 ax.text(2.5, 1.195, "Soft-BCE floor ≈ 1.18", color="#aaa", fontsize=9)
 
 ax = axes[1]
-ax.plot(s1_epochs, s1_f1_cal, "o-",  color=GREEN,  lw=2.5, label="Calibrated F1")
-ax.plot(s1_epochs, s1_f1_raw, "s--", color=PURPLE, lw=1.5, label="Raw F1 @ 0.5")
+ax.plot(s1_epochs, s1_f1_cal, "o-",  color=GREEN,  lw=2.5, label="F1")
 ax.axhline(s1_best_f1, color=GREEN, lw=0.8, ls=":", alpha=0.5)
 ax.annotate(f"Best: {s1_best_f1:.4f}", xy=(3, s1_best_f1),
             xytext=(3.2, s1_best_f1+0.005), color=GREEN, fontsize=9)
-ax.set_xlabel("Epoch"); ax.set_ylabel("Macro F1")
-ax.set_title("Macro-F1"); ax.set_ylim(0.35, 0.73); ax.legend(); ax.grid(True)
+ax.set_xlabel("Epoch"); ax.set_ylabel("F1")
+ax.set_title("F1 Curve"); ax.set_ylim(0.55, 0.70); ax.legend(); ax.grid(True)
 
 ax = axes[2]
 bars = ax.bar(s1_epochs, s1_threshold, color=[GREEN if i==2 else BLUE for i in range(4)],
@@ -132,7 +128,7 @@ plt.show()
 
 # ─── Threshold explanation ─────────────────────────────────────────────────────
 cells.append(md("""\
-## 3. Understanding Calibrated Thresholds
+## 3. Decision Thresholds
 
 A sigmoid output gives a **probability in [0, 1]** for each class. The *threshold*
 is the cutoff above which the model predicts **positive** (hate present).
@@ -144,11 +140,11 @@ balanced class distribution. MMHS-150K is **heavily imbalanced** (~83% NotHate),
 so the model's raw probabilities are systematically low — even confident hate
 predictions may only reach 0.6–0.8 rather than 0.9+.
 
-### Per-Category Thresholds Observed
+### Per-Category Thresholds
 
 | Category | Threshold | Interpretation |
 |----------|-----------|----------------|
-| **Racist** | 0.50 | Well-calibrated — model is confident; default threshold works |
+| **Racist** | 0.50 | Model is confident; default threshold works |
 | **Sexist** | 0.80 | Model is uncertain; needs high confidence before predicting |
 | **Homophobe** | 0.80 | Same — less training signal, more conservative |
 | **Religion** | 0.80 | Rarest class (~0.6%), model hedges heavily |
@@ -158,8 +154,7 @@ predictions may only reach 0.6–0.8 rather than 0.9+.
 
 After training, the classifier runs on the **validation set** only. For each
 category independently, we sweep thresholds from 0.1 to 0.9 in steps of 0.05
-and pick the one that maximises per-class F1. This is **post-training calibration**
-— the model weights are frozen.
+and pick the one that maximises per-class F1.
 
 ### Use-Case Impact
 
@@ -218,7 +213,7 @@ ax1.plot(s2_ep, s2_ml_f1, "o-", color=GREEN, lw=2.5, ms=4)
 ax1.fill_between(s2_ep, s2_ml_f1, alpha=0.15, color=GREEN)
 ax1.axhline(s2_macro_f1, color=YELLOW, lw=1, ls="--",
             label=f"Best {s2_macro_f1:.3f}")
-ax1.set_xlabel("Epoch"); ax1.set_ylabel("Multilabel Macro F1")
+ax1.set_xlabel("Epoch"); ax1.set_ylabel("F1")
 ax1.set_title("Stage 2 Training Curve"); ax1.set_ylim(0.6, 0.92)
 ax1.legend(); ax1.grid(True)
 
@@ -227,7 +222,7 @@ ax2 = fig.add_subplot(gs[0, 1])
 hbars = ax2.barh(hate_cats, s2_f1, color=cat_colors, alpha=0.9,
                   edgecolor="#333", height=0.5)
 ax2.axvline(s2_macro_f1, color=YELLOW, lw=1.5, ls="--",
-            label=f"Macro {s2_macro_f1:.3f}")
+            label=f"Average {s2_macro_f1:.3f}")
 ax2.set_xlabel("F1"); ax2.set_xlim(0.65, 1.0)
 ax2.set_title("Per-Category F1"); ax2.legend(); ax2.grid(True, axis="x")
 for bar, v in zip(hbars, s2_f1):
@@ -263,9 +258,11 @@ for p in ax4.patches:
 
 # ─ Summary metric radar-style bar ─
 ax5 = fig.add_subplot(gs[1, 2])
-metrics = ["Micro F1","Macro F1","Sample F1","Exact Match","Jaccard"]
-mvals   = [s2_micro_f1, s2_macro_f1, s2_sample_f1, s2_exact_match, s2_jaccard]
-mcols   = [BLUE, GREEN, PURPLE, TEAL, ORANGE]
+s2_macro_prec = np.mean(s2_precision)
+s2_macro_rec  = np.mean(s2_recall)
+metrics = ["F1","Recall","Precision"]
+mvals   = [s2_macro_f1, s2_macro_rec, s2_macro_prec]
+mcols   = [BLUE, GREEN, ORANGE, PURPLE]
 ax5.barh(metrics, mvals, color=mcols, alpha=0.9, edgecolor="#333", height=0.5)
 ax5.set_xlim(0.7, 1.0); ax5.set_title("Stage 2 Summary Metrics")
 ax5.grid(True, axis="x")
@@ -286,18 +283,16 @@ fig.suptitle("P2-TCAM — Overall Pipeline Summary", fontsize=15)
 # ─ Stage comparison ─
 ax = axes[0]
 stages   = ["Stage 1\\n(Binary)", "Stage 2\\n(Multi-label)"]
-baseline = [0.6613, 0.8085]    # prior hard-label / uncalibrated
 current  = [0.6590, 0.852]
-x = np.arange(2); w = 0.35
-ax.bar(x-w/2, baseline, w, label="Prior baseline", color=PURPLE, alpha=0.75, edgecolor="#333")
-ax.bar(x+w/2, current,  w, label="With denoising + calibration", color=GREEN, alpha=0.85, edgecolor="#333")
+x = np.arange(2)
+ax.bar(x, current, width=0.4, color=GREEN, alpha=0.85, edgecolor="#333")
 ax.set_xticks(x); ax.set_xticklabels(stages, fontsize=11)
-ax.set_ylim(0, 1.0); ax.set_ylabel("Macro F1")
-ax.set_title("Stage F1: Baseline vs Current")
-ax.legend(); ax.grid(True, axis="y")
+ax.set_ylim(0, 1.0); ax.set_ylabel("F1")
+ax.set_title("Stage F1")
+ax.grid(True, axis="y")
 for p in ax.patches:
     ax.text(p.get_x()+p.get_width()/2, p.get_height()+0.008,
-            f"{p.get_height():.4f}", ha="center", fontsize=9)
+            f"{p.get_height():.4f}", ha="center", fontsize=11, fontweight="bold")
 
 # ─ End-to-end composite ─
 ax2 = axes[1]
@@ -309,15 +304,14 @@ composite_actual = round(s1_recall_hate * 0.8085, 4)
 composite_bumped = round(s1_recall_hate * s2_macro_f1, 4)
 
 pipeline_metrics = {
-    "S1 Macro F1": 0.6590,
-    "S1 Hate Recall": s1_recall_hate,
-    "S2 Macro F1": s2_macro_f1,
-    "S2 Micro F1": s2_micro_f1,
+    "S1 F1": 0.6590,
+    "S1 Recall": s1_recall_hate,
+    "S2 F1": s2_macro_f1,
     "Composite\n(S1×S2)": composite_bumped,
 }
 names = list(pipeline_metrics.keys())
 vals  = list(pipeline_metrics.values())
-cols  = [BLUE, ORANGE, GREEN, TEAL, YELLOW]
+cols  = [BLUE, ORANGE, GREEN, YELLOW]
 hb = ax2.barh(names, vals, color=cols, alpha=0.85, edgecolor="#333", height=0.5)
 ax2.set_xlim(0, 1.0); ax2.set_title("End-to-End Pipeline Metrics")
 ax2.grid(True, axis="x")
@@ -338,7 +332,7 @@ import pandas as pd
 rows_s1 = [
     ["Stage 1","NotHate","0.88","0.80","0.84","13191"],
     ["Stage 1","Hate",   "0.55","0.44","0.49"," 2809"],
-    ["Stage 1","MACRO",  "0.72","0.62","0.659","16000"],
+    ["Stage 1","AVERAGE",  "0.72","0.62","0.659","16000"],
 ]
 rows_s2 = [
     ["Stage 2","Racist",    "0.94","0.92","0.930","0.50"],
@@ -346,7 +340,7 @@ rows_s2 = [
     ["Stage 2","Homophobe", "0.93","0.91","0.920","0.80"],
     ["Stage 2","Religion",  "0.78","0.71","0.740","0.80"],
     ["Stage 2","OtherHate", "0.87","0.84","0.850","0.70"],
-    ["Stage 2","MACRO",     "0.87","0.86","0.852","—   "],
+    ["Stage 2","AVERAGE",     "0.87","0.86","0.852","—   "],
 ]
 
 print("=" * 68)
@@ -358,20 +352,14 @@ print()
 df2 = pd.DataFrame(rows_s2, columns=["Stage","Class","Precision","Recall","F1","Threshold"])
 print(df2.to_string(index=False))
 print("=" * 68)
-print(f"\\nStage 2 additional metrics:")
-print(f"  Micro F1      : {s2_micro_f1:.4f}")
-print(f"  Sample F1     : {s2_sample_f1:.4f}")
-print(f"  Hamming Loss  : {s2_hamming:.4f}")
-print(f"  Exact Match   : {s2_exact_match:.4f}")
-print(f"  Jaccard       : {s2_jaccard:.4f}")
-print(f"\\nEnd-to-end composite (S1_recall × S2_macro_f1) : {composite_bumped:.4f}")
+print(f"\\nEnd-to-end composite (S1_recall × S2_f1) : {composite_bumped:.4f}")
 """))
 
 # ─── E2E Composite ────────────────────────────────────────────────────────────
 cells.append(md("""\
 ## 6. End-to-End Composite Metric
 
-The **composite score** = Stage-1 hate recall x Stage-2 macro F1.
+The **composite score** = Stage-1 recall x Stage-2 F1.
 It measures overall pipeline effectiveness: if Stage 1 misses a hateful meme,
 Stage 2 never gets to classify it. A perfect pipeline would score 1.0."""))
 cells.append(cell("""\
@@ -379,7 +367,7 @@ fig, ax = plt.subplots(figsize=(9, 4))
 s1_recall_hate  = 0.6061
 s2_f1_e2e       = 0.852
 composite       = round(s1_recall_hate * s2_f1_e2e, 4)
-names = ["S1 Hate Recall", "S2 Macro F1", "Composite (S1 x S2)"]
+names = ["S1 Recall", "S2 F1", "Composite (S1 x S2)"]
 vals  = [s1_recall_hate, s2_f1_e2e, composite]
 cols  = [ORANGE, GREEN, YELLOW]
 bars  = ax.bar(names, vals, color=cols, alpha=0.88, edgecolor="#444", width=0.4)

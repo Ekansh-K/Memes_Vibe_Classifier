@@ -3,14 +3,22 @@
 venv/
 env/
 
+# Secrets (Kaggle tokens — never commit real tokens)
+scripts/remote_secrets.env
+.env
+.env.*
+
 # Datasets & Large Files
 dataset/
 dataset.zip
 *.whl
+.kaggle_download/
 
 # Output & Logs
 checkpoints/
+results/stage1/
 vlm_eval/
+logs/
 *.log
 
 # Project specific
