@@ -202,6 +202,13 @@ def main() -> int:
         err("After move, MMHS150K_GT.json still missing.")
         return 1
 
+    # Kaggle zip may ship ocr_consolidated_filtered.json; loaders expect ocr_filtered.json
+    filtered = dest / "ocr_filtered.json"
+    alt = dest / "ocr_consolidated_filtered.json"
+    if not filtered.exists() and alt.exists():
+        shutil.copy2(alt, filtered)
+        ok(f"Copied {alt.name} → ocr_filtered.json for loader compatibility")
+
     ok(f"Dataset ready at {dest}")
     if args.skip_verify:
         return 0
