@@ -179,6 +179,12 @@ def main():
         help="Output folder under results/stage1 (default ensemble)",
     )
     ap.add_argument("--keep_vlm", action="store_true", help="Do not auto-exclude VLM by AUC")
+    ap.add_argument(
+        "--keep_short_val",
+        action="store_true",
+        help="Keep members with fewer val preds (e.g. 1500 vs 5000); "
+        "ensemble eval then uses id intersection only",
+    )
     args = ap.parse_args()
 
     results_dir = args.results_dir
@@ -223,6 +229,25 @@ def main():
         logger.info(
             f"Candidate {name}: n={len(pred['y_prob'])} macro_f1={mf1:.4f} auc={auc:.4f}"
         )
+
+    # Drop short val runs (e.g. VLM on 1500) so intersection stays full-size
+    # unless --keep_short_val. Intersection of 1500∩5000 silently shrinks eval set.
+    if candidates and not getattr(args, "keep_short_val", False):
+        max_n = max(len(c[2]["y_prob"]) for c in candidates)
+        kept = []
+        for name, npz, pred, meta in candidates:
+            n = len(pred["y_prob"])
+            if n < 0.9 * max_n:
+                logger.info(
+                    f"Excluded short-val member {name}: n={n} (full val n≈{max_n}). "
+                    "Use --keep_short_val to force include (shrinks eval to intersection)."
+                )
+                continue
+            kept.append((name, npz, pred, meta))
+        if kept:
+            candidates = kept
+        else:
+            logger.warning("All members short? Keeping originals.")
 
     if not candidates:
         raise SystemExit(
