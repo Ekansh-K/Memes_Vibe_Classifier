@@ -144,13 +144,14 @@ def main():
     ap.add_argument(
         "--min_member_auc",
         type=float,
-        default=0.60,
-        help="Drop members whose solo AUC is below this (default 0.60 drops weak VLM)",
+        default=0.52,
+        help="Drop members whose solo AUC is below this "
+        "(0.52 keeps modest VLMs that can still help as complementary signal)",
     )
     ap.add_argument(
         "--min_member_macro_f1",
         type=float,
-        default=0.55,
+        default=0.45,
         help="Drop members whose solo macro F1 is below this",
     )
     ap.add_argument(
@@ -289,7 +290,16 @@ def main():
             metrics = evaluate_stage1(
                 y_true, y_prob, min_hate_precision=args.min_hate_precision
             )
-            score = metrics["macro_f1"] + 1e-4 * metrics["auc_roc"]
+            # Prefer higher macro F1 / AUC; small bonus for multi-member diversity
+            n_mem = len(idxs)
+            score = (
+                metrics["macro_f1"]
+                + 1e-4 * metrics["auc_roc"]
+                + 1e-5 * max(n_mem - 1, 0)
+            )
+            # Skip degenerate "ensemble" of 1 using rank (rank remap alone is not ensembling)
+            if n_mem == 1 and method == "rank":
+                continue
             if score > best["score"]:
                 best.update(
                     score=score,
@@ -302,6 +312,20 @@ def main():
                     },
                 )
     eval_logger.setLevel(prev_level)
+    if best["metrics"] is None:
+        # Fallback: simple mean of all candidates
+        y_prob = combine(probs, method="mean")
+        metrics = evaluate_stage1(
+            y_true, y_prob, min_hate_precision=args.min_hate_precision
+        )
+        best.update(
+            score=metrics["macro_f1"],
+            metrics=metrics,
+            y_prob=y_prob,
+            members=names,
+            method="mean",
+            weights={n: 1.0 for n in names},
+        )
 
     assert best["metrics"] is not None
     metrics = best["metrics"]
