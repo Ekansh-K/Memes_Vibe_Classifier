@@ -40,6 +40,13 @@ class S1TextConfig:
     use_soft_labels: bool = True
     use_agreement_weighting: bool = True
     agreement_weights: tuple = (0.4, 0.7, 1.0)
+    # Soft-label recipe S0–S7 (overrides use_soft_labels / agreement when set)
+    soft_recipe: str = "S2"
+    use_binary_agreement: bool = True
+    multi_task_lambda: float = 0.5
+    soft_temperature: float = 1.0
+    min_agreement_binary: Optional[int] = None
+    early_stop_metric: str = "macro_f1"  # or "auc_roc"
 
     use_amp: bool = True
     amp_dtype: str = "bf16"  # bf16 on A6000 Ampere+
@@ -62,11 +69,30 @@ class S1TextConfig:
                     f"Choose from {list(MODEL_PRESETS)} or set model_name."
                 )
             self.model_name = MODEL_PRESETS[self.model_key]
+        # Apply soft recipe defaults (may set soft/agreement flags)
+        if self.soft_recipe:
+            from src.stage1.soft_recipes import get_soft_recipe
+
+            spec = get_soft_recipe(self.soft_recipe)
+            self.use_soft_labels = spec.use_soft_labels if not spec.multi_task else True
+            self.use_agreement_weighting = spec.use_agreement_weighting
+            self.agreement_weights = tuple(spec.agreement_weights)
+            self.use_binary_agreement = spec.use_binary_agreement
+            self.multi_task_lambda = spec.multi_task_lambda
+            self.soft_temperature = spec.soft_temperature
+            if spec.min_agreement_binary is not None:
+                self.min_agreement_binary = spec.min_agreement_binary
         if self.run_name == "s1_text_hate_latest":
-            self.run_name = f"s1_text_{self.model_key}_{self.text_mode}"
-        # DeBERTa-large: smaller default batch
-        if "large" in self.model_name.lower() and self.batch_size > 48:
-            self.batch_size = 32
+            recipe_tag = (self.soft_recipe or "S2").upper()
+            self.run_name = f"s1_text_{self.model_key}_{self.text_mode}_{recipe_tag}"
+        # Large models: smaller batch + safer AMP (bf16 often NaNs on DeBERTa-v3)
+        if "large" in self.model_name.lower():
+            if self.batch_size > 32:
+                self.batch_size = 16
+            if self.lr > 1e-5:
+                self.lr = 1e-5
+            if self.amp_dtype == "bf16":
+                self.amp_dtype = "fp16"
 
     @property
     def run_dir(self) -> Path:

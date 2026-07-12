@@ -92,6 +92,7 @@ class Stage1Dataset(Dataset):
         img_size: int = 224,
         max_samples: Optional[int] = None,
         exclude_full_disagreement: bool = False,
+        min_agreement_binary: Optional[int] = None,
         seed: int = 42,
         use_image_store: bool = False,
     ):
@@ -101,6 +102,7 @@ class Stage1Dataset(Dataset):
         self.img_size = img_size
         self.img_dir = Path(IMG_DIR)
         self.seed = seed
+        self._min_agreement_binary = min_agreement_binary
 
         self.gt_data = load_gt_json()
         self.labels = load_processed_labels()
@@ -118,7 +120,27 @@ class Stage1Dataset(Dataset):
         valid_ids = [sid for sid in all_ids if sid in self.labels]
         if exclude_full_disagreement:
             valid_ids = [
-                sid for sid in valid_ids if self.labels[sid]["agreement_level"] > 1
+                sid
+                for sid in valid_ids
+                if int(
+                    self.labels[sid].get(
+                        "agreement_binary", self.labels[sid]["agreement_level"]
+                    )
+                )
+                > 1
+            ]
+        # Optional: keep only samples with binary agreement >= threshold (soft recipe S6)
+        min_agr = getattr(self, "_min_agreement_binary", None)
+        if min_agr is not None:
+            valid_ids = [
+                sid
+                for sid in valid_ids
+                if int(
+                    self.labels[sid].get(
+                        "agreement_binary", self.labels[sid]["agreement_level"]
+                    )
+                )
+                >= min_agr
             ]
         if max_samples is not None and max_samples < len(valid_ids):
             valid_ids = self._stratified_sample(valid_ids, max_samples)
@@ -180,13 +202,16 @@ class Stage1Dataset(Dataset):
         # Short CLIP-friendly string (OCR priority then tweet; 77-token limit later)
         clip_text = " ".join(p for p in (ocr_text, tweet_text) if p) or text
 
+        agreement_fine = int(info["agreement_level"])
+        agreement_bin = int(info.get("agreement_binary", agreement_fine))
         item = {
             "tweet_id": tweet_id,
             "text": text,
             "clip_text": clip_text[:400],
             "label_binary": int(info["hard_label_binary"]),
             "soft_hate": soft_hate_prob(info),
-            "agreement_level": int(info["agreement_level"]),
+            "agreement_level": agreement_fine,
+            "agreement_binary": agreement_bin,
         }
         if self.load_images:
             item["image"] = self._load_image(tweet_id)
@@ -201,6 +226,10 @@ def stage1_collate_text(batch: list[dict]) -> dict:
         "soft_hate": torch.tensor([b["soft_hate"] for b in batch], dtype=torch.float32),
         "agreement_level": torch.tensor(
             [b["agreement_level"] for b in batch], dtype=torch.long
+        ),
+        "agreement_binary": torch.tensor(
+            [b.get("agreement_binary", b["agreement_level"]) for b in batch],
+            dtype=torch.long,
         ),
     }
 

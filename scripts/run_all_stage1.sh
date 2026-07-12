@@ -52,7 +52,9 @@ if [[ "$SMOKE" == "1" ]]; then
 else
   EPOCHS_TEXT=4
   EPOCHS_HC=12
-  EPOCHS_VLM=2
+  EPOCHS_VLM=1
+  # Cap VLM samples: full 134k is ~40h/epoch (sample-wise Qwen3-VL); 12k keeps Stage-1 practical.
+  EXTRA+=(--max_train_samples 12000 --max_val_samples 1500)
 fi
 
 mkdir -p "$ROOT/logs" "$ROOT/checkpoints/stage1" "$ROOT/results/stage1"
@@ -83,36 +85,41 @@ python scripts/verify_dataset.py || {
 }
 ok "Dataset verified"
 
+# Soft-label recipe (S0–S7). Override: SOFT_RECIPE=S5 bash scripts/run_all_stage1.sh --skip-vlm
+SOFT_RECIPE="${SOFT_RECIPE:-S3}"
+log "Using soft_recipe=$SOFT_RECIPE (set SOFT_RECIPE=S0..S7 to override)"
+
 # 1) Text models
 section "1/5 Text Stage-1: hate-latest (highest ROI)"
-log "Start: run_s1_text.py hate-latest epochs=$EPOCHS_TEXT"
-python scripts/run_s1_text.py --model hate-latest --text_mode all_text --epochs "$EPOCHS_TEXT" "${EXTRA[@]:-}"
+log "Start: run_s1_text.py hate-latest epochs=$EPOCHS_TEXT soft_recipe=$SOFT_RECIPE"
+# Note: use ${EXTRA[@]+"${EXTRA[@]}"} so empty EXTRA does not pass a blank arg to argparse
+python scripts/run_s1_text.py --model hate-latest --text_mode all_text --epochs "$EPOCHS_TEXT" --soft_recipe "$SOFT_RECIPE" ${EXTRA[@]+"${EXTRA[@]}"}
 ok "hate-latest finished → results/stage1/"
 
 section "2/5 Text Stage-1: twitter-roberta"
-log "Start: run_s1_text.py twitter-roberta epochs=$EPOCHS_TEXT"
-python scripts/run_s1_text.py --model twitter-roberta --text_mode all_text --epochs "$EPOCHS_TEXT" "${EXTRA[@]:-}"
+log "Start: run_s1_text.py twitter-roberta epochs=$EPOCHS_TEXT soft_recipe=$SOFT_RECIPE"
+python scripts/run_s1_text.py --model twitter-roberta --text_mode all_text --epochs "$EPOCHS_TEXT" --soft_recipe "$SOFT_RECIPE" ${EXTRA[@]+"${EXTRA[@]}"}
 ok "twitter-roberta finished"
 
 if [[ "$SMOKE" != "1" ]]; then
   section "2b/5 Text Stage-1: deberta-large (optional)"
   log "Start: deberta-large (soft-fail on OOM)"
-  python scripts/run_s1_text.py --model deberta-large --text_mode all_text --epochs 3 --batch_size 32 "${EXTRA[@]:-}" \
+  python scripts/run_s1_text.py --model deberta-large --text_mode all_text --epochs 3 --batch_size 32 --soft_recipe "$SOFT_RECIPE" ${EXTRA[@]+"${EXTRA[@]}"} \
     || log "DeBERTa failed/skipped — continuing stack"
 fi
 
 # 2) Hate-CLIPper
 section "3/5 Hate-CLIPper multimodal (align + adapters)"
-log "Start: run_s1_hateclipper.py epochs=$EPOCHS_HC"
-python scripts/run_s1_hateclipper.py --fusion align --epochs "$EPOCHS_HC" "${EXTRA[@]:-}"
+log "Start: run_s1_hateclipper.py epochs=$EPOCHS_HC soft_recipe=$SOFT_RECIPE"
+python scripts/run_s1_hateclipper.py --fusion align --epochs "$EPOCHS_HC" --soft_recipe "$SOFT_RECIPE" ${EXTRA[@]+"${EXTRA[@]}"}
 ok "Hate-CLIPper finished"
 
 # 3) Qwen3-VL LoRA
 if [[ "$SKIP_VLM" != "1" ]]; then
-  section "4/5 Qwen3-VL LoRA Stage-1 fine-tune"
+  section "4/5 Qwen3-VL LoRA Stage-1 fine-tune (optional; deferred for accuracy sprint)"
   log "Start: run_s1_vlm.py Qwen3-VL-8B epochs=$EPOCHS_VLM"
-  log "This is the slowest step (may take many hours)."
-  python scripts/run_s1_vlm.py --model "Qwen/Qwen3-VL-8B-Instruct" --epochs "$EPOCHS_VLM" "${EXTRA[@]:-}" \
+  log "This is the slowest step (may take many hours). Prefer --skip-vlm for text/HC soft-recipe work."
+  python scripts/run_s1_vlm.py --model "Qwen/Qwen3-VL-8B-Instruct" --epochs "$EPOCHS_VLM" ${EXTRA[@]+"${EXTRA[@]}"} \
     || log "VLM failed — ensemble will use text + HateCLIPper only"
 else
   section "4/5 VLM skipped (--skip-vlm)"

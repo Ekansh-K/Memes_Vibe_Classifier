@@ -85,13 +85,57 @@ def sweep_threshold(
     }
 
 
+def brier_score(y_true_or_soft: np.ndarray, y_prob: np.ndarray) -> float:
+    """Mean squared error between targets (hard or soft) and predicted probs."""
+    yt = np.asarray(y_true_or_soft, dtype=float)
+    yp = np.asarray(y_prob, dtype=float)
+    return float(np.mean((yp - yt) ** 2))
+
+
+def agreement_stratified_stage1(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    agreement: np.ndarray,
+    threshold: float = 0.5,
+) -> dict:
+    """Macro F1 / AUC per binary agreement level (1/2/3)."""
+    y_true = np.asarray(y_true).astype(int)
+    y_prob = np.asarray(y_prob).astype(float)
+    agreement = np.asarray(agreement).astype(int)
+    out = {}
+    for level, name in ((3, "unanimous"), (2, "majority"), (1, "split")):
+        mask = agreement == level
+        n = int(mask.sum())
+        key = f"agreement_{name}"
+        if n < 5:
+            out[key] = {"n": n, "macro_f1": None, "auc_roc": None}
+            continue
+        m = compute_stage1_metrics(y_true[mask], y_prob[mask], threshold=threshold)
+        out[key] = {
+            "n": n,
+            "macro_f1": m["macro_f1"],
+            "hate_f1": m["hate_f1"],
+            "auc_roc": m["auc_roc"],
+            "hate_recall": m["hate_recall"],
+        }
+    return out
+
+
 def evaluate_stage1(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     min_hate_precision: float = 0.40,
+    agreement: Optional[np.ndarray] = None,
+    soft_targets: Optional[np.ndarray] = None,
 ) -> dict:
-    """Convenience: full Stage-1 report with threshold sweep."""
+    """Convenience: full Stage-1 report with threshold sweep.
+
+    Optional:
+      agreement — per-sample binary agreement levels for stratified metrics
+      soft_targets — soft P(hate) for Brier vs soft distribution
+    """
     sweep = sweep_threshold(y_true, y_prob, min_hate_precision=min_hate_precision)
+    thr = sweep["best_macro_f1"]["threshold"]
     out = {
         "at_best_macro_f1": sweep["best_macro_f1"],
         "at_best_hate_recall": sweep["best_hate_recall"],
@@ -101,12 +145,20 @@ def evaluate_stage1(
         "hate_recall": sweep["best_macro_f1"]["hate_recall"],
         "hate_f1": sweep["best_macro_f1"]["hate_f1"],
         "auc_roc": sweep["best_macro_f1"]["auc_roc"],
-        "threshold": sweep["best_macro_f1"]["threshold"],
+        "threshold": thr,
     }
+    # Calibration / soft fidelity
+    out["brier_hard"] = brier_score(y_true, y_prob)
+    if soft_targets is not None:
+        out["brier_soft"] = brier_score(soft_targets, y_prob)
+    if agreement is not None:
+        out["stratified"] = agreement_stratified_stage1(
+            y_true, y_prob, agreement, threshold=thr
+        )
     logger.info(
         f"[S1 Eval] macro_f1={out['macro_f1']:.4f}  hate_f1={out['hate_f1']:.4f}  "
         f"hate_recall={out['hate_recall']:.4f}  auc={out['auc_roc']:.4f}  "
-        f"thr={out['threshold']:.2f}"
+        f"thr={out['threshold']:.2f}  brier_hard={out['brier_hard']:.4f}"
     )
     return out
 

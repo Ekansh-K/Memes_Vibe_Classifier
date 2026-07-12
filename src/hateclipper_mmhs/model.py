@@ -60,6 +60,7 @@ class HateCLIPperMMHS(nn.Module):
         vis_dim = self.clip.config.vision_config.hidden_size
         txt_dim = self.clip.config.text_config.hidden_size
 
+        self._freeze_encoders = freeze_encoders
         if freeze_encoders:
             for p in self.clip.parameters():
                 p.requires_grad = False
@@ -109,6 +110,38 @@ class HateCLIPperMMHS(nn.Module):
             f"[HateCLIPper] fusion={fusion} map_dim={map_dim} adapters={use_adapters} "
             f"trainable={n_train:,}"
         )
+
+    def unfreeze_last_n_blocks(self, n: int) -> None:
+        """Unfreeze last N transformer blocks of CLIP vision + text encoders.
+
+        Useful partial FT: keep most of CLIP frozen, tune top layers only.
+        """
+        if n <= 0:
+            return
+        # Vision transformer layers
+        vision_layers = getattr(self.clip.vision_model.encoder, "layers", None)
+        if vision_layers is not None:
+            for layer in list(vision_layers)[-n:]:
+                for p in layer.parameters():
+                    p.requires_grad = True
+        # Text transformer layers
+        text_layers = getattr(self.clip.text_model.encoder, "layers", None)
+        if text_layers is not None:
+            for layer in list(text_layers)[-n:]:
+                for p in layer.parameters():
+                    p.requires_grad = True
+        # Always unfreeze final layer norms / projections if present
+        for name, mod in (
+            ("vision_model.post_layernorm", getattr(self.clip.vision_model, "post_layernorm", None)),
+            ("text_model.final_layer_norm", getattr(self.clip.text_model, "final_layer_norm", None)),
+            ("visual_projection", getattr(self.clip, "visual_projection", None)),
+            ("text_projection", getattr(self.clip, "text_projection", None)),
+        ):
+            if mod is not None:
+                for p in mod.parameters():
+                    p.requires_grad = True
+        n_train = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        logger.info(f"[HateCLIPper] unfreeze_last_n={n} → trainable={n_train:,}")
 
     def encode_batch(
         self,

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Run Stage-1 text full fine-tune.
+"""Run Stage-1 text full fine-tune (soft recipes S0–S7).
 
 Examples (on A6000):
-  python scripts/run_s1_text.py --model hate-latest --text_mode all_text
-  python scripts/run_s1_text.py --model deberta-large --batch_size 32
+  python scripts/run_s1_text.py --model hate-latest --soft_recipe S1
+  python scripts/run_s1_text.py --model hate-latest --soft_recipe S5 --epochs 6
+  python scripts/run_s1_text.py --model hatebert --soft_recipe S3
   python scripts/run_s1_text.py --model twitter-roberta --max_train_samples 2000  # smoke
 """
 
@@ -19,6 +20,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.s1_text.config import MODEL_PRESETS, S1TextConfig
 from src.s1_text.trainer import run_s1_text
+from src.stage1.soft_recipes import SOFT_RECIPES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,13 +43,25 @@ def main():
     p.add_argument("--num_workers", type=int, default=8)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="auto")
-    p.add_argument("--no_soft_labels", action="store_true")
+    p.add_argument("--no_soft_labels", action="store_true", help="Force hard labels (overrides recipe)")
+    p.add_argument(
+        "--soft_recipe",
+        default="S2",
+        choices=list(SOFT_RECIPES),
+        help="Soft-label recipe S0–S7 (see src/stage1/soft_recipes.py)",
+    )
+    p.add_argument(
+        "--early_stop_metric",
+        default="macro_f1",
+        choices=["macro_f1", "auc_roc", "hate_f1"],
+    )
     p.add_argument("--no_amp", action="store_true")
     p.add_argument("--amp_dtype", default="bf16", choices=["bf16", "fp16"])
     p.add_argument("--ocr_source", default="filtered")
     p.add_argument("--run_name", default="")
     args = p.parse_args()
 
+    soft_recipe = "S0" if args.no_soft_labels else args.soft_recipe
     cfg = S1TextConfig(
         model_key=args.model,
         model_name=args.model_name or "",
@@ -61,7 +75,8 @@ def main():
         num_workers=args.num_workers,
         seed=args.seed,
         device=args.device,
-        use_soft_labels=not args.no_soft_labels,
+        soft_recipe=soft_recipe,
+        early_stop_metric=args.early_stop_metric,
         use_amp=not args.no_amp,
         amp_dtype=args.amp_dtype,
     )
@@ -72,8 +87,19 @@ def main():
 
     metrics = run_s1_text(cfg)
     print("\n=== Stage-1 Text Final ===")
-    for k in ("macro_f1", "hate_f1", "hate_recall", "auc_roc", "threshold", "run_name"):
-        print(f"  {k}: {metrics.get(k)}")
+    for k in (
+        "macro_f1",
+        "hate_f1",
+        "hate_recall",
+        "auc_roc",
+        "threshold",
+        "brier_hard",
+        "brier_soft",
+        "soft_recipe",
+        "run_name",
+    ):
+        if k in metrics:
+            print(f"  {k}: {metrics.get(k)}")
 
 
 if __name__ == "__main__":

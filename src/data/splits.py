@@ -9,6 +9,7 @@ Handles:
 """
 
 import json
+import logging
 from collections import Counter
 from pathlib import Path
 from typing import Optional
@@ -111,10 +112,14 @@ def to_binary(label: int) -> int:
 
 
 def compute_agreement_level(labels: list[int]) -> int:
-    """Compute annotator agreement level.
+    """Compute annotator agreement level on fine 6-class labels.
 
     Returns:
         3 if all agree, 2 if majority exists (2 of 3 agree), 1 if all differ.
+
+    Note: two annotators can both mark "hate" with different categories
+    (e.g. racist vs sexist) and this returns 2. Prefer
+    ``compute_agreement_binary`` for Stage-1 soft-label weighting.
     """
     unique = len(set(labels))
     if unique == 1:
@@ -123,6 +128,23 @@ def compute_agreement_level(labels: list[int]) -> int:
         return 2
     else:
         return 1
+
+
+def compute_agreement_binary(labels: list[int]) -> int:
+    """Agreement on hate vs not-hate only (Stage-1 soft-label weighting).
+
+    Maps each fine label to binary (0=NotHate, 1=any hate), then:
+        3 — all annotators agree on binary
+        2 — 2–1 majority on binary
+        1 — all differ (only possible with non-binary weird cases; rare with 3 votes)
+    """
+    binary = [to_binary(l) for l in labels]
+    unique = len(set(binary))
+    if unique == 1:
+        return 3
+    if unique == 2:
+        return 2
+    return 1
 
 
 # ── Processed labels generation ──────────────────────────────────────────────
@@ -135,7 +157,8 @@ def generate_processed_labels(output_path: Optional[Path] = None) -> dict:
         - hard_label_binary: int
         - soft_label_6class: list[float] (probability distribution)
         - soft_label_binary: list[float]
-        - agreement_level: int (3, 2, or 1)
+        - agreement_level: int (3, 2, or 1) — fine 6-class agreement
+        - agreement_binary: int (3, 2, or 1) — hate vs not-hate agreement
         - annotator_labels: list[int] (original 3 labels)
 
     Returns:
@@ -152,6 +175,7 @@ def generate_processed_labels(output_path: Optional[Path] = None) -> dict:
         # Soft binary: aggregate hate vs not-hate probabilities
         soft_bin = [soft_6[0], sum(soft_6[1:])]
         agreement = compute_agreement_level(labels)
+        agreement_bin = compute_agreement_binary(labels)
 
         processed[tweet_id] = {
             "hard_label_6class": hard_6,
@@ -159,6 +183,7 @@ def generate_processed_labels(output_path: Optional[Path] = None) -> dict:
             "soft_label_6class": soft_6,
             "soft_label_binary": soft_bin,
             "agreement_level": agreement,
+            "agreement_binary": agreement_bin,
             "annotator_labels": labels,
         }
 
@@ -174,7 +199,10 @@ def generate_processed_labels(output_path: Optional[Path] = None) -> dict:
 
 
 def load_processed_labels(force_reload: bool = False) -> dict:
-    """Load processed labels from disk, generating if needed."""
+    """Load processed labels from disk, generating if needed.
+
+    Backfills ``agreement_binary`` for older processed_labels.json files.
+    """
     global _labels_cache
     if _labels_cache is not None and not force_reload:
         return _labels_cache
@@ -185,6 +213,24 @@ def load_processed_labels(force_reload: bool = False) -> dict:
     else:
         print("[INFO] processed_labels.json not found, generating...")
         _labels_cache = generate_processed_labels()
+
+    # Backfill binary agreement (and soft fields) without full regenerate
+    n_fill = 0
+    for _tid, info in _labels_cache.items():
+        if "agreement_binary" not in info:
+            ann = info.get("annotator_labels")
+            if ann is not None:
+                info["agreement_binary"] = compute_agreement_binary(ann)
+            else:
+                # Fallback: treat fine agreement as binary if votes unavailable
+                info["agreement_binary"] = int(info.get("agreement_level", 2))
+            n_fill += 1
+    if n_fill:
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"[labels] Backfilled agreement_binary for {n_fill:,} samples "
+            "(re-run generate_processed_labels to persist)"
+        )
 
     return _labels_cache
 

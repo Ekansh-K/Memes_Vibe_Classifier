@@ -1,4 +1,4 @@
-"""Train Hate-CLIPper MMHS Stage-1."""
+"""Train Hate-CLIPper MMHS Stage-1 (soft recipes S0–S7, optional partial unfreeze)."""
 
 from __future__ import annotations
 
@@ -15,9 +15,15 @@ from transformers import get_cosine_schedule_with_warmup
 
 from src.hateclipper_mmhs.config import HateCLIPperConfig
 from src.hateclipper_mmhs.model import HateCLIPperMMHS
-from src.p2.losses import SoftBCEWithAgreementWeighting, TemperatureScaler, compute_binary_pos_weight
+from src.p2.losses import TemperatureScaler
 from src.stage1.dataset import Stage1Dataset, stage1_collate_multimodal
 from src.stage1.eval import evaluate_stage1, save_stage1_results
+from src.stage1.soft_recipes import (
+    apply_soft_temperature,
+    build_hard_criterion,
+    build_stage1_criterion,
+    get_soft_recipe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,20 +46,37 @@ def _seed(s: int) -> None:
 def _eval_probs(model, loader, device, use_amp, amp_dtype_str):
     model.eval()
     dtype = torch.bfloat16 if amp_dtype_str == "bf16" else torch.float16
-    probs, labels, ids = [], [], []
+    probs, labels, ids, agrs, softs = [], [], [], [], []
     for batch in loader:
         with autocast(enabled=use_amp and device.type == "cuda", dtype=dtype):
             logits = model(batch["image"], batch["clip_text"])
         probs.append(torch.sigmoid(logits.float()).cpu().numpy())
         labels.append(batch["label_binary"].numpy())
         ids.extend(batch["tweet_id"])
-    return np.concatenate(labels), np.concatenate(probs), ids
+        agr_key = "agreement_binary" if "agreement_binary" in batch else "agreement_level"
+        agrs.append(batch[agr_key].numpy())
+        softs.append(batch["soft_hate"].numpy())
+    return (
+        np.concatenate(labels),
+        np.concatenate(probs),
+        ids,
+        np.concatenate(agrs),
+        np.concatenate(softs),
+    )
+
+
+def _score_metric(metrics: dict, key: str) -> float:
+    return float(metrics.get(key, metrics.get("macro_f1", -1.0)))
 
 
 def run_hateclipper(config: HateCLIPperConfig) -> dict:
     _seed(config.seed)
     device = _device(config.device)
-    logger.info(f"[HateCLIPper] device={device} fusion={config.fusion} run={config.run_name}")
+    recipe = get_soft_recipe(config.soft_recipe or "S2")
+    logger.info(
+        f"[HateCLIPper] device={device} fusion={config.fusion} run={config.run_name} "
+        f"soft_recipe={recipe.name}"
+    )
 
     train_ds = Stage1Dataset(
         "train",
@@ -62,6 +85,7 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
         load_images=True,
         img_size=config.img_size,
         max_samples=config.max_train_samples,
+        min_agreement_binary=config.min_agreement_binary,
         seed=config.seed,
         use_image_store=config.use_image_store,
     )
@@ -99,6 +123,8 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
         pin_memory=device.type == "cuda",
     )
 
+    # freeze_encoders=True unless partial unfreeze requested
+    freeze = config.freeze_encoders and config.unfreeze_last_n <= 0
     model = HateCLIPperMMHS(
         clip_model=config.clip_model,
         map_dim=config.map_dim,
@@ -108,21 +134,43 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
         drop_map=config.drop_map,
         drop_fusion=config.drop_fusion,
         drop_pre=config.drop_pre,
-        freeze_encoders=config.freeze_encoders,
+        freeze_encoders=freeze if config.unfreeze_last_n <= 0 else True,
         use_adapters=config.use_adapters,
         adapter_ratio=config.adapter_ratio,
     ).to(device)
+    if config.unfreeze_last_n > 0:
+        model.unfreeze_last_n_blocks(config.unfreeze_last_n)
 
     hard = [train_ds.labels[i]["hard_label_binary"] for i in train_ds.sample_ids]
-    pos_w = compute_binary_pos_weight(hard, device)
-    criterion = SoftBCEWithAgreementWeighting(
-        pos_weight=pos_w,
-        agreement_weights=config.agreement_weights,
-        use_agreement_weighting=config.use_agreement_weighting,
-    ).to(device)
+    criterion = build_stage1_criterion(recipe, hard, device)
+    hard_criterion = None
+    if recipe.multi_task:
+        hard_criterion = build_hard_criterion(hard, device)
+    if recipe.name == "S0":
+        criterion = build_hard_criterion(hard, device)
 
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params, lr=config.lr, weight_decay=config.weight_decay)
+    # Param groups: backbone vs head when partial unfreeze
+    if config.unfreeze_last_n > 0:
+        backbone, head = [], []
+        for name, p in model.named_parameters():
+            if not p.requires_grad:
+                continue
+            if name.startswith("clip."):
+                backbone.append(p)
+            else:
+                head.append(p)
+        optimizer = torch.optim.AdamW(
+            [
+                {"params": backbone, "lr": config.backbone_lr},
+                {"params": head, "lr": config.lr},
+            ],
+            weight_decay=config.weight_decay,
+        )
+        params = backbone + head
+    else:
+        params = [p for p in model.parameters() if p.requires_grad]
+        optimizer = torch.optim.AdamW(params, lr=config.lr, weight_decay=config.weight_decay)
+
     steps = max(1, len(train_loader) // config.grad_accum_steps) * config.epochs
     warmup = int(steps * config.warmup_ratio)
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup, steps)
@@ -132,17 +180,19 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
     scaler = GradScaler(enabled=use_scaler)
     amp_dtype = torch.bfloat16 if config.amp_dtype == "bf16" else torch.float16
 
-    best_f1 = -1.0
+    best_score = -1.0
     best_path = config.run_dir / "best.pt"
     config.run_dir.mkdir(parents=True, exist_ok=True)
     config.results_run_dir.mkdir(parents=True, exist_ok=True)
     config.save(config.run_dir / "config.yaml")
     patience = 0
     history = []
+    stop_metric = config.early_stop_metric or "macro_f1"
 
     for epoch in range(1, config.epochs + 1):
         model.train()
-        if config.freeze_encoders:
+        # Keep frozen CLIP parts in eval mode for BN/dropout stability
+        if config.unfreeze_last_n <= 0 and config.freeze_encoders:
             model.clip.eval()
         running, n_steps = 0.0, 0
         optimizer.zero_grad(set_to_none=True)
@@ -150,12 +200,23 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
         for step, batch in enumerate(pbar, 1):
             soft = batch["soft_hate"].to(device)
             hard_t = batch["label_binary"].to(device).float()
-            targets = soft if config.use_soft_labels else hard_t
-            agr = batch["agreement_level"].to(device)
+            soft = apply_soft_temperature(soft, recipe.soft_temperature)
+            if config.use_binary_agreement and "agreement_binary" in batch:
+                agr = batch["agreement_binary"].to(device)
+            else:
+                agr = batch["agreement_level"].to(device)
 
             with autocast(enabled=use_amp, dtype=amp_dtype):
                 logits = model(batch["image"], batch["clip_text"])
-            loss = criterion(logits.float(), targets, agr) / config.grad_accum_steps
+            logits_f = logits.float()
+            if recipe.multi_task and hard_criterion is not None:
+                loss = (
+                    hard_criterion(logits_f, hard_t, None)
+                    + recipe.multi_task_lambda * criterion(logits_f, soft, agr)
+                ) / config.grad_accum_steps
+            else:
+                targets = soft if recipe.use_soft_labels else hard_t
+                loss = criterion(logits_f, targets, agr) / config.grad_accum_steps
 
             if use_scaler:
                 scaler.scale(loss).backward()
@@ -178,23 +239,32 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
             n_steps = step
             pbar.set_postfix(loss=f"{running / step:.4f}")
 
-        y_true, y_prob, ids = _eval_probs(
+        y_true, y_prob, ids, agr_np, soft_np = _eval_probs(
             model, val_loader, device, use_amp, config.amp_dtype
         )
-        metrics = evaluate_stage1(y_true, y_prob)
+        metrics = evaluate_stage1(
+            y_true, y_prob, agreement=agr_np, soft_targets=soft_np
+        )
         metrics["epoch"] = epoch
         metrics["train_loss"] = running / max(n_steps, 1)
+        metrics["soft_recipe"] = recipe.name
         history.append(metrics)
         logger.info(
             f"[HateCLIPper] ep{epoch}: macro_f1={metrics['macro_f1']:.4f} "
             f"hate_recall={metrics['hate_recall']:.4f} auc={metrics['auc_roc']:.4f}"
         )
 
-        if metrics["macro_f1"] > best_f1:
-            best_f1 = metrics["macro_f1"]
+        score = _score_metric(metrics, stop_metric)
+        if score > best_score:
+            best_score = score
             patience = 0
             torch.save(
-                {"model_state": model.state_dict(), "config": config.__dict__, "metrics": metrics},
+                {
+                    "model_state": model.state_dict(),
+                    "config": config.__dict__,
+                    "metrics": metrics,
+                    "soft_recipe": recipe.name,
+                },
                 best_path,
             )
             save_stage1_results(config.results_run_dir, metrics, y_true, y_prob, ids)
@@ -206,7 +276,6 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
 
     ckpt = torch.load(best_path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt["model_state"])
-    # Temperature calibration
     model.eval()
     all_logits = []
     with torch.no_grad():
@@ -214,14 +283,19 @@ def run_hateclipper(config: HateCLIPperConfig) -> dict:
             with autocast(enabled=use_amp, dtype=amp_dtype):
                 all_logits.append(model(batch["image"], batch["clip_text"]).float().cpu())
     logits_cat = torch.cat(all_logits)
-    y_true, _, ids = _eval_probs(model, val_loader, device, use_amp, config.amp_dtype)
+    y_true, _, ids, agr_np, soft_np = _eval_probs(
+        model, val_loader, device, use_amp, config.amp_dtype
+    )
     temp = TemperatureScaler()
     temp.fit(logits_cat, torch.tensor(y_true, dtype=torch.float32))
     y_prob = torch.sigmoid(logits_cat / temp.temperature.detach()).numpy()
-    final = evaluate_stage1(y_true, y_prob)
+    final = evaluate_stage1(
+        y_true, y_prob, agreement=agr_np, soft_targets=soft_np
+    )
     final["history"] = history
     final["temperature"] = float(temp.temperature.item())
     final["run_name"] = config.run_name
+    final["soft_recipe"] = recipe.name
     save_stage1_results(config.results_run_dir, final, y_true, y_prob, ids)
     ckpt["temperature"] = final["temperature"]
     ckpt["metrics"] = final

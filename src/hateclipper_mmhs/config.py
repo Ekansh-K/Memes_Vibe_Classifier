@@ -43,6 +43,15 @@ class HateCLIPperConfig:
     use_soft_labels: bool = True
     use_agreement_weighting: bool = True
     agreement_weights: tuple = (0.4, 0.7, 1.0)
+    soft_recipe: str = "S2"
+    use_binary_agreement: bool = True
+    multi_task_lambda: float = 0.5
+    soft_temperature: float = 1.0
+    min_agreement_binary: Optional[int] = None
+    early_stop_metric: str = "macro_f1"
+    # Partial unfreeze: unfreeze last N transformer blocks of CLIP vision+text
+    unfreeze_last_n: int = 0
+    backbone_lr: float = 1e-6
 
     use_amp: bool = True
     amp_dtype: str = "bf16"
@@ -59,10 +68,26 @@ class HateCLIPperConfig:
     results_dir: str = str(PROJECT_ROOT / "results" / "stage1")
 
     def __post_init__(self):
+        if self.soft_recipe:
+            from src.stage1.soft_recipes import get_soft_recipe
+
+            spec = get_soft_recipe(self.soft_recipe)
+            self.use_soft_labels = spec.use_soft_labels if not spec.multi_task else True
+            self.use_agreement_weighting = spec.use_agreement_weighting
+            self.agreement_weights = tuple(spec.agreement_weights)
+            self.use_binary_agreement = spec.use_binary_agreement
+            self.multi_task_lambda = spec.multi_task_lambda
+            self.soft_temperature = spec.soft_temperature
+            if spec.min_agreement_binary is not None:
+                self.min_agreement_binary = spec.min_agreement_binary
         if self.run_name == "s1_hateclipper_align":
             self.run_name = f"s1_hateclipper_{self.fusion}"
             if self.use_adapters:
                 self.run_name += "_adapters"
+            recipe_tag = (self.soft_recipe or "S2").upper()
+            self.run_name += f"_{recipe_tag}"
+            if self.unfreeze_last_n > 0:
+                self.run_name += f"_uf{self.unfreeze_last_n}"
         if self.fusion == "cross" and self.map_dim > 256:
             # n² features; cap for VRAM/params
             self.map_dim = 256

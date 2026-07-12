@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Run Hate-CLIPper Stage-1 on MMHS (align fusion + optional adapters).
+"""Run Hate-CLIPper Stage-1 on MMHS (align fusion + soft recipes + optional unfreeze).
 
-  python scripts/run_s1_hateclipper.py --fusion align --use_adapters
+  python scripts/run_s1_hateclipper.py --fusion align --soft_recipe S3
+  python scripts/run_s1_hateclipper.py --fusion align --soft_recipe S5 --unfreeze_last_n 2
   python scripts/run_s1_hateclipper.py --fusion align --max_train_samples 2000
 """
 
@@ -17,6 +18,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.hateclipper_mmhs.config import HateCLIPperConfig
 from src.hateclipper_mmhs.trainer import run_hateclipper
+from src.stage1.soft_recipes import SOFT_RECIPES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +48,24 @@ def main():
     p.add_argument("--device", default="auto")
     p.add_argument("--no_image_store", action="store_true")
     p.add_argument("--amp_dtype", default="bf16", choices=["bf16", "fp16"])
+    p.add_argument(
+        "--soft_recipe",
+        default="S2",
+        choices=list(SOFT_RECIPES),
+        help="Soft-label recipe S0–S7",
+    )
+    p.add_argument(
+        "--unfreeze_last_n",
+        type=int,
+        default=0,
+        help="Unfreeze last N CLIP vision+text blocks (0=keep frozen)",
+    )
+    p.add_argument("--backbone_lr", type=float, default=1e-6)
+    p.add_argument(
+        "--early_stop_metric",
+        default="macro_f1",
+        choices=["macro_f1", "auc_roc", "hate_f1"],
+    )
     p.add_argument("--run_name", default="")
     args = p.parse_args()
 
@@ -65,14 +85,28 @@ def main():
         device=args.device,
         use_image_store=not args.no_image_store,
         amp_dtype=args.amp_dtype,
+        soft_recipe=args.soft_recipe,
+        unfreeze_last_n=args.unfreeze_last_n,
+        backbone_lr=args.backbone_lr,
+        early_stop_metric=args.early_stop_metric,
     )
     if args.run_name:
         cfg.run_name = args.run_name
 
     metrics = run_hateclipper(cfg)
     print("\n=== Hate-CLIPper Final ===")
-    for k in ("macro_f1", "hate_f1", "hate_recall", "auc_roc", "threshold", "run_name"):
-        print(f"  {k}: {metrics.get(k)}")
+    for k in (
+        "macro_f1",
+        "hate_f1",
+        "hate_recall",
+        "auc_roc",
+        "threshold",
+        "brier_hard",
+        "soft_recipe",
+        "run_name",
+    ):
+        if k in metrics:
+            print(f"  {k}: {metrics.get(k)}")
 
 
 if __name__ == "__main__":

@@ -23,32 +23,46 @@ logger = logging.getLogger(__name__)
 
 class SoftBCEWithAgreementWeighting(nn.Module):
     """BCEWithLogitsLoss that supports soft targets, agreement weighting,
-    and BCE-specific label smoothing (Options A + B + C combined).
+    optional pos_weight, optional focal modulation, and label smoothing.
 
     For each sample i:
         smoothed_target = target * (1 - label_smoothing) + 0.5 * label_smoothing
-        per_sample_loss = BCE(logit, smoothed_target) * agreement_weight[agreement_level]
+        per_sample_loss = BCE(logit, smoothed_target) [* focal] * agreement_weight
         loss = weighted_mean(per_sample_loss)
+
+    Notes
+    -----
+    - ``pos_weight=None`` disables class rebalancing (often better with soft targets).
+    - Agreement levels are 1/2/3; use *binary* agreement for Stage-1 soft recipes.
     """
 
     def __init__(
         self,
-        pos_weight: torch.Tensor,
+        pos_weight: torch.Tensor | None = None,
         agreement_weights: tuple = (0.2, 0.5, 1.0),
         use_agreement_weighting: bool = True,
         label_smoothing: float = 0.0,
+        focal_gamma: float = 0.0,
     ):
         super().__init__()
         # reduction='none' for per-sample weighting
-        self.bce = nn.BCEWithLogitsLoss(pos_weight=pos_weight, reduction="none")
+        if pos_weight is None:
+            self.bce = nn.BCEWithLogitsLoss(reduction="none")
+            self._has_pos_weight = False
+        else:
+            self.bce = nn.BCEWithLogitsLoss(pos_weight=pos_weight, reduction="none")
+            self._has_pos_weight = True
         self.use_agreement_weighting = use_agreement_weighting
         # agreement_weights: index 0 = level 1 (all differ), 1 = level 2, 2 = level 3
         self.register_buffer(
             "_aw",
-            torch.tensor([agreement_weights[0], agreement_weights[1], agreement_weights[2]],
-                         dtype=torch.float32),
+            torch.tensor(
+                [agreement_weights[0], agreement_weights[1], agreement_weights[2]],
+                dtype=torch.float32,
+            ),
         )
         self.label_smoothing = label_smoothing
+        self.focal_gamma = float(focal_gamma or 0.0)
 
     def forward(
         self,
@@ -67,15 +81,25 @@ class SoftBCEWithAgreementWeighting(nn.Module):
         if self.label_smoothing > 0:
             targets = targets * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
 
+        logits = logits.view(-1)
+        targets = targets.view(-1).float()
         per_sample = self.bce(logits, targets)  # (B,)
+
+        # Optional focal modulation (works with soft targets via |y - p|)
+        if self.focal_gamma > 0:
+            with torch.no_grad():
+                p = torch.sigmoid(logits)
+                # pt = probability of being "correct" toward soft target
+                pt = 1.0 - (p - targets).abs()
+                pt = pt.clamp(min=1e-6)
+            per_sample = per_sample * (1.0 - pt).pow(self.focal_gamma)
 
         # Option B: agreement-based per-sample weighting
         if self.use_agreement_weighting and agreement_levels is not None:
             # Map agreement levels (1,2,3) to weights via index (0,1,2).
-            # Ensure same device — _aw follows the module, agreement_levels follows the batch.
-            w = self._aw[(agreement_levels - 1).to(self._aw.device)]  # (B,)
-            w = w.to(per_sample.device)  # move weight to loss device for multiply
-            # Weighted mean (normalize by sum of weights for stable gradients)
+            agr = agreement_levels.view(-1).clamp(1, 3)
+            w = self._aw[(agr - 1).to(self._aw.device)]  # (B,)
+            w = w.to(per_sample.device)
             return (per_sample * w).sum() / w.sum().clamp(min=1.0)
 
         return per_sample.mean()

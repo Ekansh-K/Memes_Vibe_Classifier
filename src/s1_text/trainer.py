@@ -1,4 +1,4 @@
-"""Train Stage-1 text classifier on soft binary labels."""
+"""Train Stage-1 text classifier on soft binary labels (recipes S0–S7)."""
 
 from __future__ import annotations
 
@@ -13,11 +13,17 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import get_cosine_schedule_with_warmup
 
-from src.p2.losses import SoftBCEWithAgreementWeighting, TemperatureScaler, compute_binary_pos_weight
+from src.p2.losses import SoftBCEWithAgreementWeighting, TemperatureScaler
 from src.s1_text.config import S1TextConfig
 from src.s1_text.model import TextHateClassifier
 from src.stage1.dataset import Stage1Dataset, stage1_collate_text
 from src.stage1.eval import evaluate_stage1, save_stage1_results
+from src.stage1.soft_recipes import (
+    apply_soft_temperature,
+    build_hard_criterion,
+    build_stage1_criterion,
+    get_soft_recipe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +45,7 @@ def _set_seed(seed: int) -> None:
 @torch.no_grad()
 def _collect_probs(model, loader, device, use_amp, amp_dtype) -> tuple:
     model.eval()
-    all_prob, all_true, all_ids = [], [], []
+    all_prob, all_true, all_ids, all_agr, all_soft = [], [], [], [], []
     dtype = torch.bfloat16 if amp_dtype == "bf16" else torch.float16
     for batch in loader:
         with autocast(enabled=use_amp and device.type == "cuda", dtype=dtype):
@@ -48,17 +54,30 @@ def _collect_probs(model, loader, device, use_amp, amp_dtype) -> tuple:
         all_prob.append(probs)
         all_true.append(batch["label_binary"].numpy())
         all_ids.extend(batch["tweet_id"])
+        agr_key = "agreement_binary" if "agreement_binary" in batch else "agreement_level"
+        all_agr.append(batch[agr_key].numpy())
+        all_soft.append(batch["soft_hate"].numpy())
     return (
         np.concatenate(all_true),
         np.concatenate(all_prob),
         all_ids,
+        np.concatenate(all_agr),
+        np.concatenate(all_soft),
     )
+
+
+def _score_metric(metrics: dict, key: str) -> float:
+    return float(metrics.get(key, metrics.get("macro_f1", -1.0)))
 
 
 def run_s1_text(config: S1TextConfig) -> dict:
     _set_seed(config.seed)
     device = _resolve_device(config.device)
-    logger.info(f"[S1Text] device={device}  model={config.model_name}  run={config.run_name}")
+    recipe = get_soft_recipe(config.soft_recipe or "S2")
+    logger.info(
+        f"[S1Text] device={device}  model={config.model_name}  run={config.run_name}  "
+        f"soft_recipe={recipe.name}"
+    )
 
     train_ds = Stage1Dataset(
         "train",
@@ -67,6 +86,7 @@ def run_s1_text(config: S1TextConfig) -> dict:
         load_images=False,
         max_samples=config.max_train_samples,
         exclude_full_disagreement=config.exclude_full_disagreement,
+        min_agreement_binary=config.min_agreement_binary,
         seed=config.seed,
     )
     val_ds = Stage1Dataset(
@@ -106,13 +126,13 @@ def run_s1_text(config: S1TextConfig) -> dict:
     ).to(device)
 
     hard_labels = [train_ds.labels[i]["hard_label_binary"] for i in train_ds.sample_ids]
-    pos_weight = compute_binary_pos_weight(hard_labels, device)
-    criterion = SoftBCEWithAgreementWeighting(
-        pos_weight=pos_weight,
-        agreement_weights=config.agreement_weights,
-        use_agreement_weighting=config.use_agreement_weighting,
-        label_smoothing=config.label_smoothing,
-    ).to(device)
+    criterion = build_stage1_criterion(recipe, hard_labels, device)
+    hard_criterion = None
+    if recipe.multi_task:
+        hard_criterion = build_hard_criterion(hard_labels, device)
+    # S0 needs pos_weight hard-only criterion
+    if recipe.name == "S0":
+        criterion = build_hard_criterion(hard_labels, device)
 
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=config.lr, weight_decay=config.weight_decay
@@ -123,18 +143,18 @@ def run_s1_text(config: S1TextConfig) -> dict:
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup, total_steps)
 
     use_amp = config.use_amp and device.type == "cuda"
-    # GradScaler only for fp16; bf16 does not need it
     use_scaler = use_amp and config.amp_dtype == "fp16"
     scaler = GradScaler(enabled=use_scaler)
     amp_dtype = torch.bfloat16 if config.amp_dtype == "bf16" else torch.float16
 
-    best_f1 = -1.0
+    best_score = -1.0
     best_path = config.run_dir / "best.pt"
     config.run_dir.mkdir(parents=True, exist_ok=True)
     config.results_run_dir.mkdir(parents=True, exist_ok=True)
     config.save(config.run_dir / "config.yaml")
     patience = 0
     history = []
+    stop_metric = config.early_stop_metric or "macro_f1"
 
     for epoch in range(1, config.epochs + 1):
         model.train()
@@ -144,13 +164,26 @@ def run_s1_text(config: S1TextConfig) -> dict:
         for step, batch in enumerate(pbar, 1):
             soft = batch["soft_hate"].to(device)
             hard = batch["label_binary"].to(device).float()
-            targets = soft if config.use_soft_labels else hard
-            agr = batch["agreement_level"].to(device)
+            soft = apply_soft_temperature(soft, recipe.soft_temperature)
+            if config.use_binary_agreement and "agreement_binary" in batch:
+                agr = batch["agreement_binary"].to(device)
+            else:
+                agr = batch["agreement_level"].to(device)
 
             with autocast(enabled=use_amp, dtype=amp_dtype):
                 logits = model(batch["text"])
-            # Loss in fp32 (stable SoftBCE + pos_weight; matches P2 practice)
-            loss = criterion(logits.float(), targets, agr) / config.grad_accum_steps
+
+            logits_f = logits.float()
+            if recipe.multi_task and hard_criterion is not None:
+                loss_hard = hard_criterion(logits_f, hard, None)
+                loss_soft = criterion(logits_f, soft, agr)
+                loss = (
+                    loss_hard + recipe.multi_task_lambda * loss_soft
+                ) / config.grad_accum_steps
+            else:
+                targets = soft if recipe.use_soft_labels else hard
+                # S0 already forces hard via recipe.use_soft_labels=False
+                loss = criterion(logits_f, targets, agr) / config.grad_accum_steps
 
             if use_scaler:
                 scaler.scale(loss).backward()
@@ -169,23 +202,32 @@ def run_s1_text(config: S1TextConfig) -> dict:
                 scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
 
+            if not torch.isfinite(loss).all():
+                logger.error(
+                    f"[S1Text] Non-finite loss at step {step}: {loss.item()} — aborting run"
+                )
+                raise RuntimeError(f"Non-finite loss at step {step}: {loss.item()}")
             running += loss.item() * config.grad_accum_steps
             pbar.set_postfix(loss=f"{running / step:.4f}")
 
-        y_true, y_prob, ids = _collect_probs(
+        y_true, y_prob, ids, agr_np, soft_np = _collect_probs(
             model, val_loader, device, use_amp, config.amp_dtype
         )
-        metrics = evaluate_stage1(y_true, y_prob)
+        metrics = evaluate_stage1(
+            y_true, y_prob, agreement=agr_np, soft_targets=soft_np
+        )
         metrics["epoch"] = epoch
         metrics["train_loss"] = running / max(step, 1)
+        metrics["soft_recipe"] = recipe.name
         history.append(metrics)
         logger.info(
             f"[S1Text] epoch {epoch}: macro_f1={metrics['macro_f1']:.4f} "
             f"hate_recall={metrics['hate_recall']:.4f} auc={metrics['auc_roc']:.4f}"
         )
 
-        if metrics["macro_f1"] > best_f1:
-            best_f1 = metrics["macro_f1"]
+        score = _score_metric(metrics, stop_metric)
+        if score > best_score:
+            best_score = score
             patience = 0
             torch.save(
                 {
@@ -193,6 +235,7 @@ def run_s1_text(config: S1TextConfig) -> dict:
                     "config": config.__dict__,
                     "metrics": metrics,
                     "model_name": config.model_name,
+                    "soft_recipe": recipe.name,
                 },
                 best_path,
             )
@@ -208,11 +251,9 @@ def run_s1_text(config: S1TextConfig) -> dict:
     # Reload best + temperature scale
     ckpt = torch.load(best_path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt["model_state"])
-    y_true, y_prob, ids = _collect_probs(
+    y_true, y_prob, ids, agr_np, soft_np = _collect_probs(
         model, val_loader, device, use_amp, config.amp_dtype
     )
-    # Temperature on logits: refit from probs via inverse sigmoid is awkward;
-    # recompute logits for calibration
     model.eval()
     all_logits = []
     with torch.no_grad():
@@ -225,13 +266,15 @@ def run_s1_text(config: S1TextConfig) -> dict:
     scaler_t = TemperatureScaler()
     scaler_t.fit(logits_cat, labels_t)
     y_prob_cal = torch.sigmoid(logits_cat / scaler_t.temperature.detach()).numpy()
-    final = evaluate_stage1(y_true, y_prob_cal)
+    final = evaluate_stage1(
+        y_true, y_prob_cal, agreement=agr_np, soft_targets=soft_np
+    )
     final["history"] = history
     final["temperature"] = float(scaler_t.temperature.item())
     final["run_name"] = config.run_name
     final["model_name"] = config.model_name
+    final["soft_recipe"] = recipe.name
     save_stage1_results(config.results_run_dir, final, y_true, y_prob_cal, ids)
-    # Persist temperature with checkpoint
     ckpt["temperature"] = final["temperature"]
     ckpt["metrics"] = final
     torch.save(ckpt, best_path)
