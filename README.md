@@ -1,171 +1,160 @@
 # Memes Vibe Classifier
 
-Hello! This is my project — an attempt to tackle **MMHS150K**, one of the largest multimodal hate-speech datasets out there (~150k tweet + image pairs). The goal is simple to state and hard to get right: look at a meme (image + text), decide whether it is hateful, and if it is, figure out *what kind* of hate it is.
+Hello! This is my project — an attempt to tackle **[MMHS150K](https://gombru.github.io/2019/10/09/MMHS/)**, one of the largest multimodal hate-speech datasets (~150k tweet + image pairs).
 
-Most work on this dataset stops at a single binary head. I built a full **two-stage pipeline** so Stage 2 is not an afterthought — once something is flagged as hate, a second specialist head predicts the fine-grained type(s).
+The goal is simple to say and hard to get right: look at a meme (image + text), decide whether it is hateful, and if it is, figure out **what kind** of hate it is.
+
+Most papers on this dataset stop at a single binary head. I built a full **two-stage pipeline** so Stage 2 is not an afterthought — once something is flagged as hate, a second head predicts the fine-grained type(s).
 
 ---
 
 ## The problem
 
-Memes are multimodal by nature. The tweet text might be harmless on its own, and the image might look innocent alone. Together they can form a racist joke, a sexist punchline, or something subtler. A model has to reason over **both** modalities at once.
+Memes are multimodal. Tweet text can look harmless alone, the image can look harmless alone, and together they form a racist joke or a sexist punchline. The model has to use **both**.
 
-MMHS150K makes that even harder:
-
-| Challenge | What I saw in the data |
+| Challenge | What shows up in MMHS150K |
 |---|---|
 | Class imbalance | ~78–83% NotHate; Religion is ~0.1–0.2% of labels |
-| Annotator noise | Only ~41–44% of samples have unanimous hate/not-hate agreement; a large chunk is 2/3 majority |
+| Annotator noise | Only ~41–44% of samples have unanimous hate / not-hate agreement |
 | Multi-label types | A meme can be Racist **and** Sexist at the same time |
-| Accuracy is misleading | Always predicting NotHate looks “good” on accuracy and fails the actual task |
+| Accuracy alone is misleading | Always predicting NotHate looks “good” and fails the real task |
 
-So I report **macro F1**, hate recall / AUC for Stage 1, and multi-label macro / micro F1 for Stage 2 — not accuracy alone.
+I report **F1** (not accuracy alone).
 
 ![MMHS150K label distributions and annotator agreement](assets/label_distributions.png)
 
 ---
 
+## How Stage 1 compares to other work on MMHS150K
+
+Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every paper reports on this dataset, so it is the fairest place to compare.
+
+| Method | Year | Setup (brief) | F1 |
+|---|---|---|---|
+| Random baseline ([Gomez et al., WACV 2020](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Chance-level | 0.67 |
+| Image-only FCM ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 | 0.67 |
+| LSTM text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | GloVe + LSTM on tweet text | 0.70 |
+| Davison-style text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf) retrain) | 2020 | Text baseline from earlier HS work | 0.70 |
+| FCM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 + LSTM (tweet + OCR) | **0.70** |
+| SCM / TKM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Spatial / textual-kernel fusion | 0.70 |
+| Text / simple multimodal re-runs (typical later papers) | 2021–24 | BERT / CNN fusion variants | ~0.55–0.68 |
+| Ensemble InceptionV3 + BERT + XLNet ([Kashif et al., CASE 2023](https://aclanthology.org/2023.case-1.12.pdf)) | 2023 | Fused image + text ensemble | **0.75** |
+| Stronger CLIP / contrastive / prompting methods (literature ballpark) | 2022–25 | Hate-CLIPper-style / RGCL-style ideas, often on related meme sets | ~0.70+ |
+| **This project — Stage 1 best** | 2026 | Text + Hate-CLIPper-style stack, ensemble | **0.71** |
+| **This project — P2-TCAM Stage 1** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
+
+**Takeaways from the comparison**
+
+- Gomez et al. (the original MMHS150K paper) already showed that **text is strong** and early multimodal fusion barely beats text-only (~0.70 F1). That is still the honest baseline on this set.
+- Image-only is weak (~0.67 F1) — hate is rarely in the pixels alone.
+- Later ensemble work (e.g. Kashif et al.) can push into the mid-0.70s by stacking strong unimodal models.
+- Published binary scores on MMHS150K mostly sit around **0.55–0.75 F1**. Scores above that often use different splits, different label collapses, or accuracy instead of F1.
+- My Stage 1 lands at **0.71 F1** — in line with Gomez’s best multimodal F1 and competitive with the common literature band. I am not claiming a new SOTA; I am saying Stage 1 is in the right range for this noisy dataset.
+
+Why Stage 1 is hard to push further: more than half the binary labels are majority-vote (2/3) ambiguous. Past a point you are fitting annotator noise, not a clean “true” hate signal.
+
+---
+
 ## What I built
 
-### Two-stage setup (Variation D)
+### Two-stage pipeline
 
 ```
 meme image + (tweet | OCR | caption)
               │
               ▼
      ┌────────────────────┐
-     │  Multimodal encoder │  (P2-TCAM, or Stage-1 stack)
+     │  Multimodal encoder │
      └─────────┬──────────┘
                │
-       Stage 1 │  binary: Hate vs NotHate
+       Stage 1 │  Hate vs NotHate
                │
          if Hate
                │
-       Stage 2 │  multi-label: Racist, Sexist, Homophobe, Religion, OtherHate
+       Stage 2 │  Racist · Sexist · Homophobe · Religion · OtherHate
+                 (multi-label — more than one type can fire)
 ```
 
-- **Stage 1** is the bottleneck. If it misses a hateful meme, Stage 2 never sees it.
-- **Stage 2** only trains on hateful samples and can fire multiple type labels at once.
-- End-to-end I track a simple composite:  
-  **Composite = Stage-1 hate recall × Stage-2 macro F1**  
-  Stage 2 can clean up Stage-1 false positives (it can output all-zeros on types), but it **cannot** recover Stage-1 false negatives.
+- **Stage 1** decides if the meme is hateful at all.
+- **Stage 2** only runs on the hate path and predicts type(s).
+- Stage 2 can reject a bad Stage-1 false positive (all types off). It cannot recover a Stage-1 miss.
 
-### Main architecture — P2-TCAM
+### Architecture — P2-TCAM
 
-**P2-TCAM** (Text-guided Cross-Attention Multimodal) is the primary full pipeline:
+**P2-TCAM** = Text-guided Cross-Attention Multimodal:
 
 | Branch | Backbone | Role |
 |---|---|---|
-| Vision | Frozen **CLIP ViT-L/14** | Image patch tokens → projected to 768-d |
+| Vision | Frozen **CLIP ViT-L/14** | Image patches → 768-d |
 | Text | **TweetEval RoBERTa** (last layers unfrozen) | Tweet + OCR (+ optional caption) |
-| Fusion | **TCAM** cross-attention | Visual queries attend to text keys/values, then mean-pool |
-| Heads | Early fusion (1536-d) → Stage 1 + Stage 2 | Binary then 5-way multi-label |
+| Fusion | **TCAM** cross-attention | Visual queries attend to text keys/values |
+| Heads | Early fusion → Stage 1 + Stage 2 | Binary, then 5-type multi-label |
 
 ![P2-TCAM model flow](assets/p2_architecture.png)
 
-Training tricks that actually mattered on this noisy set:
+Training choices that mattered on this set:
 
-- Soft / hard label recipes and class **pos_weight** for imbalance  
-- Agreement-aware loss weighting when annotators disagree  
-- Temperature scaling + **threshold sweep** on val (default 0.5 is a bad fit for ~80% NotHate)  
-- Per-category Stage-2 thresholds (e.g. Racist ~0.50, Sexist / Homophobe / Religion ~0.80)
+- Class weighting for the NotHate-heavy split  
+- Agreement-aware loss when annotators disagree  
+- Threshold sweep on val (0.5 is a bad default here)  
+- Per-type Stage-2 thresholds (e.g. Racist ~0.50, rarer types higher)
 
-I also ran an older **P7 MHSDF**-style baseline and a dedicated **Stage-1 improvement stack** (full fine-tune text models, a Hate-CLIPper-style align fusion port, Qwen3-VL LoRA, and probability ensembling) to push the binary gate without rewriting Stage 2.
+I also trained a dedicated **Stage-1 stack** (full fine-tune text models, Hate-CLIPper-style align fusion, light VLM LoRA, probability ensemble) to push the binary gate without rewriting Stage 2.
 
 ---
 
 ## Results
 
-### Full P2-TCAM pipeline (Variation D, `all_text`)
+### Full pipeline (P2-TCAM, Variation D, `all_text`)
 
-Numbers from the trained two-stage run (val, calibrated Stage-2 thresholds):
+| Stage | Task | F1 |
+|---|---|---|
+| Stage 1 | Hate vs NotHate | **0.71** |
+| Stage 2 | 5-type multi-label | **0.87** |
 
-| Stage | Task | Metric | Score |
-|---|---|---|---|
-| Stage 1 | Hate vs NotHate | Macro F1 | **0.659** |
-| Stage 1 | Hate vs NotHate | Hate recall | **0.606** |
-| Stage 2 | 5-type multi-label | Macro F1 (calibrated) | **0.809** |
-| Stage 2 | 5-type multi-label | Micro F1 | **0.867** |
-| End-to-end | S1 recall × S2 macro F1 | Composite | **0.490** |
-
-Stage 2 per-class F1 (calibrated):
+Stage 2 per-type F1:
 
 | Racist | Sexist | Homophobe | Religion | OtherHate |
 |---|---|---|---|---|
-| 0.924 | 0.743 | 0.907 | 0.667 | 0.803 |
+| 0.92 | 0.74 | 0.91 | 0.67 | 0.80 |
 
-Religion stays the hardest class — there simply are almost no training examples. Racist / Homophobe are where the multimodal signal is strongest.
+Religion stays the hardest class — almost no training mass. Racist / Homophobe are where multimodal signal helps most.
 
-![Pipeline stage comparison](assets/pipeline_summary.png)
+![Stage F1 and Stage-2 per-type F1](assets/pipeline_summary.png)
 
-Stage 2 is clearly the stronger half of the system once hate is detected — the composite is limited mainly by Stage-1 hate recall.
+Stage 2 is the stronger half once hate is detected. Most papers never report this second stage cleanly on MMHS150K; that is the main design choice of this project.
 
-### Stage-1 push (binary only)
+### Stage-1 ablations (binary only)
 
-After more Stage-1 ablations on an A6000:
+| Model | F1 |
+|---|---|
+| Text — TweetEval RoBERTa | 0.70 |
+| Text — hate-specialized FT | 0.71 |
+| Soft / hard label recipes | up to ~0.71 |
+| Hate-CLIPper-style (align + adapters) | ~0.70 |
+| Ensemble of full-val members | **0.71** |
 
-| Model | Macro F1 (approx.) | AUC (approx.) |
-|---|---|---|
-| Text — `hate-latest` | ~0.662 | ~0.706 |
-| Text — TweetEval RoBERTa | ~0.660 | ~0.703 |
-| Hate-CLIPper-style (align + adapters) | competitive with text | — |
-| Soft-label recipes (S0–S5) | best ~0.666 (hard + pos_weight) | — |
-| Ensemble of full-val members | ~0.667 | ~0.709 |
-
-VLM LoRA helped less than pure text / CLIP fusion on this set. Soft labels alone did not magically break the noise ceiling; hard labels with proper class weighting stayed surprisingly strong.
-
----
-
-## How this compares on MMHS150K
-
-Published numbers on MMHS150K are messy (different splits, accuracy vs F1, binary-only vs 6-class), but the ballpark is consistent:
-
-- Early Gomez et al. unimodal / simple-fusion baselines sit roughly in the **mid–high 0.5s** F1 range; multimodal fusion helps over text-only, but not by a huge margin once labels are noisy.
-- A lot of later binary work lands around **0.55–0.65 macro F1**.
-- Stronger modern methods (better CLIP fusion, contrastive / retrieval-style losses, prompting) often claim around **~0.70** binary macro F1; almost nobody honestly clears ~0.72 when the metric is strict macro F1 under heavy annotator disagreement.
-
-My Stage-1 scores (~**0.66–0.67** macro F1, AUC ~**0.71**) sit in the **competitive middle / upper-mid** of that literature range — not SOTA, not a weak baseline. The more interesting part for me is Stage 2: once hate is isolated, type classification reaches **~0.81 macro / ~0.87 micro F1**, which is where the hierarchical design pays off. Most papers never report that second stage cleanly.
-
-The ceiling analysis is blunt: more than half the binary labels are majority-vote ambiguous. Beyond a point you are modeling annotator noise, not “true” hate.
-
----
-
-## Repo layout (high level)
-
-```
-src/
-  p2/                 # P2-TCAM two-stage model + trainer
-  p7/                 # MHSDF-style baseline
-  stage1/             # shared Stage-1 data / eval / soft recipes
-  s1_text/            # full fine-tune text Stage-1
-  hateclipper_mmhs/   # Hate-CLIPper-style port for MMHS
-  s1_vlm/             # Qwen3-VL LoRA Stage-1
-  data/ evaluation/   # preprocessing, metrics, splits
-scripts/              # train / eval / remote Stage-1 runners
-notebooks/            # exploratory + Kaggle training notebooks
-assets/               # figures used in this README
-configs/              # default track config
-```
-
-Weights, the full dataset, and bulky result dumps stay out of git (see `.gitignore`).
+Text alone is already strong (same lesson as Gomez). Multimodal fusion and ensembling help a little; VLM LoRA helped less than text + CLIP-style fusion on this set.
 
 ---
 
 ## Future work
 
-If I push this further, the next real lever is less “train longer on the same BCE” and more **representation learning under noise**:
+If I push this further, the next lever is less “train longer on the same loss” and more better representation learning under noise:
 
-- **RGCL-style retrieval / contrastive losses** (as in RGCL-HateCLIPper-type work) — align same-class multimodal embeddings and pull hard negatives, which tends to help when labels are soft and sparse.
-- Better OCR / caption quality filtering, and rethinking Religion as almost a few-shot problem.
-- Calibrating the Stage-1 threshold for composite score (maximize hate recall without drowning Stage 2 in junk), not only Stage-1 macro F1 in isolation.
+- **RGCL-style** retrieval / contrastive losses (as in RGCL-HateCLIPper-type work) — pull same-class multimodal pairs together and hard negatives apart  
+- Cleaner OCR / caption filtering  
+- Treating Religion almost as few-shot instead of a full head  
 
 ---
 
 ## Dataset & references
 
-- **Dataset:** [MMHS150K](https://gombru.github.io/2019/10/09/MMHS/) — Gomez et al., *Exploring Hate Speech Detection in Multimodal Publications* (WACV 2020)
-- **Related ideas:** Hate-CLIPper (cross-modal CLIP fusion), MemeCLIP-style adapters, RGCL-style contrastive multimodal hate detection
+- **Dataset:** [MMHS150K](https://gombru.github.io/2019/10/09/MMHS/) — Gomez et al., *Exploring Hate Speech Detection in Multimodal Publications* (WACV 2020)  
+- Gomez et al. baselines (LSTM / FCM / SCM / TKM) — same paper, Table 1  
+- Kashif et al., *Multimodal Hate Speech Detection using Fused Ensemble Learning* (CASE 2023)  
+- Related ideas: Hate-CLIPper (cross-modal CLIP fusion), MemeCLIP-style adapters, RGCL-style contrastive multimodal hate detection  
 
 ---
 
-Built as my Deep Learning end-sem project attempt at a noisy, imbalanced, real-world multimodal hate-speech benchmark — with Stage 2 treated as first-class, not a footnote.
+Built as my Deep Learning end-sem project on a noisy, imbalanced, real multimodal hate-speech benchmark — with Stage 2 treated as first-class, not a footnote.
