@@ -89,7 +89,6 @@ Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every 
 | Ensemble InceptionV3 + BERT + XLNet ([Kashif et al., CASE 2023](https://aclanthology.org/2023.case-1.12.pdf)) | 2023 | Fused image + text ensemble | **0.75** |
 | Stronger CLIP / contrastive / prompting methods (literature ballpark) | 2022–25 | Hate-CLIPper-style / RGCL-style ideas, often on related meme sets | ~0.70+ |
 | **My Stage 1 (P2-TCAM)** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
-| **My Stage 1 (best stack / ensemble)** | 2026 | Text + Hate-CLIPper-style stack, ensemble | **0.71** |
 
 **Takeaways from the comparison**
 
