@@ -3,26 +3,48 @@
 venv/
 env/
 
-# Secrets (Kaggle tokens — never commit real tokens)
+# Secrets (never commit real tokens)
 scripts/remote_secrets.env
 .env
 .env.*
 
-# Datasets & Large Files
+# Datasets & large binary artifacts
 dataset/
 dataset.zip
 *.whl
 .kaggle_download/
+*.pt
+*.pth
+*.npy
+*.npz
+*.bin
+*.ckpt
+*.onnx
 
-# Output & Logs
+# Training outputs, logs, bulky results
 checkpoints/
-results/stage1/
+results/
 vlm_eval/
 logs/
 *.log
 
-# Project specific
+# Local plan / analysis docs (not part of public repo)
 plan_docs/
+implementation_plan.md
+p2_explan.md
+stage1_ceiling_analysis.md
+data_preprocessing_detail.md
+
+# Scratch / dump images at repo root (README figures live under assets/)
+/output.png
+/p2-output*.png
+/p2_architecture.png
+notebooks/*.png
+notebooks/*.jpg
+
+# Vendored third-party clones (reference only; re-clone via third_party/README.md)
+third_party/hateclipper/
+third_party/MemeCLIP/
 
 # Python caches
 __pycache__/
@@ -32,9 +54,13 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+*.egg-info/
+dist/
+build/
 
 # IDE & OS
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
 .github/
