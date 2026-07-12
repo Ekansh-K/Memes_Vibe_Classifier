@@ -25,36 +25,6 @@ I report **F1** (not accuracy alone).
 
 ---
 
-## How Stage 1 compares to other work on MMHS150K
-
-Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every paper reports on this dataset, so it is the fairest place to compare.
-
-| Method | Year | Setup (brief) | F1 |
-|---|---|---|---|
-| Random baseline ([Gomez et al., WACV 2020](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Chance-level | 0.67 |
-| Image-only FCM ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 | 0.67 |
-| LSTM text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | GloVe + LSTM on tweet text | 0.70 |
-| Davison-style text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf) retrain) | 2020 | Text baseline from earlier HS work | 0.70 |
-| FCM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 + LSTM (tweet + OCR) | **0.70** |
-| SCM / TKM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Spatial / textual-kernel fusion | 0.70 |
-| Text / simple multimodal re-runs (typical later papers) | 2021–24 | BERT / CNN fusion variants | ~0.55–0.68 |
-| Ensemble InceptionV3 + BERT + XLNet ([Kashif et al., CASE 2023](https://aclanthology.org/2023.case-1.12.pdf)) | 2023 | Fused image + text ensemble | **0.75** |
-| Stronger CLIP / contrastive / prompting methods (literature ballpark) | 2022–25 | Hate-CLIPper-style / RGCL-style ideas, often on related meme sets | ~0.70+ |
-| **This project — Stage 1 best** | 2026 | Text + Hate-CLIPper-style stack, ensemble | **0.71** |
-| **This project — P2-TCAM Stage 1** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
-
-**Takeaways from the comparison**
-
-- Gomez et al. (the original MMHS150K paper) already showed that **text is strong** and early multimodal fusion barely beats text-only (~0.70 F1). That is still the honest baseline on this set.
-- Image-only is weak (~0.67 F1) — hate is rarely in the pixels alone.
-- Later ensemble work (e.g. Kashif et al.) can push into the mid-0.70s by stacking strong unimodal models.
-- Published binary scores on MMHS150K mostly sit around **0.55–0.75 F1**. Scores above that often use different splits, different label collapses, or accuracy instead of F1.
-- My Stage 1 lands at **0.71 F1** — in line with Gomez’s best multimodal F1 and competitive with the common literature band. I am not claiming a new SOTA; I am saying Stage 1 is in the right range for this noisy dataset.
-
-Why Stage 1 is hard to push further: more than half the binary labels are majority-vote (2/3) ambiguous. Past a point you are fitting annotator noise, not a clean “true” hate signal.
-
----
-
 ## What I built
 
 ### Two-stage pipeline
@@ -100,6 +70,36 @@ Training choices that mattered on this set:
 - Per-type Stage-2 thresholds (e.g. Racist ~0.50, rarer types higher)
 
 I also trained a dedicated **Stage-1 stack** (full fine-tune text models, Hate-CLIPper-style align fusion, light VLM LoRA, probability ensemble) to push the binary gate without rewriting Stage 2.
+
+---
+
+## How my Stage 1 compares to other work on MMHS150K
+
+Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every paper reports on this dataset, so it is the fairest place to compare.
+
+| Method | Year | Setup (brief) | F1 |
+|---|---|---|---|
+| Random baseline ([Gomez et al., WACV 2020](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Chance-level | 0.67 |
+| Image-only FCM ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 | 0.67 |
+| LSTM text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | GloVe + LSTM on tweet text | 0.70 |
+| Davison-style text ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf) retrain) | 2020 | Text baseline from earlier HS work | 0.70 |
+| FCM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Inception-v3 + LSTM (tweet + OCR) | **0.70** |
+| SCM / TKM multimodal ([Gomez et al.](https://openaccess.thecvf.com/content_WACV_2020/papers/Gomez_Exploring_Hate_Speech_Detection_in_Multimodal_Publications_WACV_2020_paper.pdf)) | 2020 | Spatial / textual-kernel fusion | 0.70 |
+| Text / simple multimodal re-runs (typical later papers) | 2021–24 | BERT / CNN fusion variants | ~0.55–0.68 |
+| Ensemble InceptionV3 + BERT + XLNet ([Kashif et al., CASE 2023](https://aclanthology.org/2023.case-1.12.pdf)) | 2023 | Fused image + text ensemble | **0.75** |
+| Stronger CLIP / contrastive / prompting methods (literature ballpark) | 2022–25 | Hate-CLIPper-style / RGCL-style ideas, often on related meme sets | ~0.70+ |
+| **My Stage 1 (P2-TCAM)** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
+| **My Stage 1 (best stack / ensemble)** | 2026 | Text + Hate-CLIPper-style stack, ensemble | **0.71** |
+
+**Takeaways from the comparison**
+
+- Gomez et al. (the original MMHS150K paper) already showed that **text is strong** and early multimodal fusion barely beats text-only (~0.70 F1). That is still the honest baseline on this set.
+- Image-only is weak (~0.67 F1) — hate is rarely in the pixels alone.
+- Later ensemble work (e.g. Kashif et al.) can push into the mid-0.70s by stacking strong unimodal models.
+- Published binary scores on MMHS150K mostly sit around **0.55–0.75 F1**. Scores above that often use different splits, different label collapses, or accuracy instead of F1.
+- My Stage 1 lands at **0.71 F1** — in line with Gomez’s best multimodal F1 and competitive with the common literature band. I am not claiming a new SOTA; I am saying Stage 1 is in the right range for this noisy dataset.
+
+Why Stage 1 is hard to push further: more than half the binary labels are majority-vote (2/3) ambiguous. Past a point you are fitting annotator noise, not a clean “true” hate signal.
 
 ---
 
