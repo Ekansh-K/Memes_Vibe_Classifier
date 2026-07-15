@@ -1,10 +1,10 @@
 # Memes Vibe Classifier
 
-Hello! This is my project — an attempt to tackle **[MMHS150K](https://gombru.github.io/2019/10/09/MMHS/)**, one of the largest multimodal hate-speech datasets (~150k tweet + image pairs).
+Hello! This is our project — an attempt to tackle **[MMHS150K](https://gombru.github.io/2019/10/09/MMHS/)**, one of the largest multimodal hate-speech datasets (~150k tweet + image pairs).
 
 The goal is simple to say and hard to get right: look at a meme (image + text), decide whether it is hateful, and if it is, figure out **what kind** of hate it is.
 
-Most papers on this dataset stop at a single binary head. I built a full **two-stage pipeline** so Stage 2 is not an afterthought — once something is flagged as hate, a second head predicts the fine-grained type(s).
+Most papers on this dataset stop at a single binary head. We built a full **two-stage pipeline** so Stage 2 is not an afterthought — once something is flagged as hate, a second head predicts the fine-grained type(s).
 
 ---
 
@@ -19,13 +19,13 @@ Memes are multimodal. Tweet text can look harmless alone, the image can look har
 | Multi-label types | A meme can be Racist **and** Sexist at the same time |
 | Accuracy alone is misleading | Always predicting NotHate looks “good” and fails the real task |
 
-I report **F1** (not accuracy alone).
+We report **F1** (not accuracy alone).
 
 ![MMHS150K label distributions and annotator agreement](assets/label_distributions.png)
 
 ---
 
-## What I built
+## What we built
 
 ### Two-stage pipeline
 
@@ -69,11 +69,11 @@ Training choices that mattered on this set:
 - Threshold sweep on val (0.5 is a bad default here)  
 - Per-type Stage-2 thresholds (e.g. Racist ~0.50, rarer types higher)
 
-I also trained a dedicated **Stage-1 stack** (full fine-tune text models, Hate-CLIPper-style align fusion, light VLM LoRA, probability ensemble) to push the binary gate without rewriting Stage 2.
+We also trained a dedicated **Stage-1 stack** (full fine-tune text models, Hate-CLIPper-style align fusion, light VLM LoRA, probability ensemble) to push the binary gate without rewriting Stage 2.
 
 ---
 
-## How my Stage 1 compares to other work on MMHS150K
+## How our Stage 1 compares to other work on MMHS150K
 
 Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every paper reports on this dataset, so it is the fairest place to compare.
 
@@ -88,7 +88,7 @@ Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every 
 | Text / simple multimodal re-runs (typical later papers) | 2021–24 | BERT / CNN fusion variants | ~0.55–0.68 |
 | Ensemble InceptionV3 + BERT + XLNet ([Kashif et al., CASE 2023](https://aclanthology.org/2023.case-1.12.pdf)) | 2023 | Fused image + text ensemble | **0.75** |
 | Stronger CLIP / contrastive / prompting methods (literature ballpark) | 2022–25 | Hate-CLIPper-style / RGCL-style ideas, often on related meme sets | ~0.70+ |
-| **My Stage 1 (P2-TCAM)** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
+| **Our Stage 1 (P2-TCAM)** | 2026 | CLIP ViT-L/14 + TweetEval RoBERTa + TCAM | **0.71** |
 
 **Takeaways from the comparison**
 
@@ -96,7 +96,7 @@ Stage 1 is the binary gate: **Hate vs NotHate**. That is the setup almost every 
 - Image-only is weak (~0.67 F1) — hate is rarely in the pixels alone.
 - Later ensemble work (e.g. Kashif et al.) can push into the mid-0.70s by stacking strong unimodal models.
 - Published binary scores on MMHS150K mostly sit around **0.55–0.75 F1**. Scores above that often use different splits, different label collapses, or accuracy instead of F1.
-- My Stage 1 lands at **0.71 F1** — in line with Gomez’s best multimodal F1 and competitive with the common literature band. I am not claiming a new SOTA; I am saying Stage 1 is in the right range for this noisy dataset.
+- Our Stage 1 lands at **0.71 F1** — in line with Gomez’s best multimodal F1 and competitive with the common literature band. We am not claiming a new SOTA; we are saying Stage 1 is in the right range for this noisy dataset.
 
 Why Stage 1 is hard to push further: more than half the binary labels are majority-vote (2/3) ambiguous. Past a point you are fitting annotator noise, not a clean “true” hate signal.
 
@@ -139,7 +139,7 @@ Text alone is already strong (same lesson as Gomez). Multimodal fusion and ensem
 
 ## Future work
 
-If I push this further, the next lever is less “train longer on the same loss” and more better representation learning under noise:
+If we push this further, the next lever is less “train longer on the same loss” and more better representation learning under noise:
 
 - **RGCL-style** retrieval / contrastive losses (as in RGCL-HateCLIPper-type work) — pull same-class multimodal pairs together and hard negatives apart  
 - Cleaner OCR / caption filtering  
@@ -156,4 +156,4 @@ If I push this further, the next lever is less “train longer on the same loss�
 
 ---
 
-Built as my Deep Learning end-sem project on a noisy, imbalanced, real multimodal hate-speech benchmark — with Stage 2 treated as first-class, not a footnote.
+Built as our Deep Learning end-sem project on a noisy, imbalanced, real multimodal hate-speech benchmark — with Stage 2 treated as first-class, not a footnote.
